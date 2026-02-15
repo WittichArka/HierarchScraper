@@ -1,6 +1,17 @@
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
-var builder = WebApplication.CreateBuilder(args);
+// Configure Serilog for file logging
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .Enrich.FromLogContext()
+    .CreateLogger();
+
+try
+{
+    Log.Information("Starting HierarchScraper API...");
+
+    var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
@@ -24,6 +35,9 @@ builder.Services.AddDbContext<HierarchScraper.Infrastructure.Data.ApplicationDbC
 
 // Add logging
 builder.Services.AddLogging();
+
+// Add Serilog to the logging pipeline
+builder.Host.UseSerilog();
 
 var app = builder.Build();
 
@@ -96,6 +110,15 @@ app.MapGet("/api/vacancies/{id}", async (int id, HierarchScraper.Core.Interfaces
 .WithOpenApi();
 
 app.Run();
+}
+catch (Exception ex)
+{
+    Log.Fatal(ex, "Application terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
 
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
