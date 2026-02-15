@@ -1,6 +1,8 @@
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 
+var builder = WebApplication.CreateBuilder(args);
+
 // Configure Serilog for file logging
 Log.Logger = new LoggerConfiguration()
     .ReadFrom.Configuration(builder.Configuration)
@@ -10,8 +12,6 @@ Log.Logger = new LoggerConfiguration()
 try
 {
     Log.Information("Starting HierarchScraper API...");
-
-    var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
