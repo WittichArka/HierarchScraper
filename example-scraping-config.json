@@ -1,0 +1,19 @@
+{
+  "ListSelector": "#job-listings",
+  "NextPageSelector": ".pagination-next",
+  "ItemConfig": {
+    "ItemSelector": ".job-item",
+    "ExclusionRules": [
+      {
+        "Selector": ".advertisement",
+        "MustExist": true
+      },
+      {
+        "Selector": ".job-title",
+        "MustExist": false
+      }
+    ],
+    "TitleSelector": ".job-title",
+    "DetailSelector": ".job-link"
+  }
+}

@@ -1,0 +1,6 @@
+@HierarchScraper.Web_HostAddress = http://localhost:5170
+
+GET {{HierarchScraper.Web_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

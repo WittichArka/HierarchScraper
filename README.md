@@ -1,0 +1,132 @@
+# HierarchScraper - Web Scraping Application
+
+Une application .NET 8 pour le web scraping générique suivant les principes SOLID.
+
+## Architecture
+
+L'application suit une architecture en couches avec :
+
+- **HierarchScraper.Core** : Logique métier, modèles et interfaces
+- **HierarchScraper.Infrastructure** : Implémentation concrète (scraping, persistence)
+- **HierarchScraper.Web** : API REST pour gérer les sources et les offres
+
+## Fonctionnalités
+
+### 1. Gestion des sources de scraping
+- Ajout/Modification/Suppression de sources
+- Configuration JSON pour les règles de scraping
+- Activation/Désactivation des sources
+
+### 2. Règles de scraping configurables
+- **ListSelector** : Sélecteur CSS pour trouver la liste des éléments
+- **ItemSelector** : Sélecteur CSS pour trouver les items individuels
+- **ExclusionRules** : Règles pour filtrer les éléments indésirables (publicités, etc.)
+- **TitleSelector** : Sélecteur CSS pour extraire le titre de l'offre
+- **DetailSelector** : Sélecteur CSS pour extraire l'URL de détail
+- **NextPageSelector** : Sélecteur CSS pour la pagination
+
+### 3. Règles d'exclusion
+Chaque règle d'exclusion contient :
+- **Selector** : Sélecteur CSS pour chercher la règle
+- **MustExist** : Boolean indiquant si l'élément doit être présent ou non
+
+Logique d'exclusion :
+- Si `MustExist=true` et l'élément est trouvé → Exclure (ex: publicité trouvée)
+- Si `MustExist=true` et l'élément n'est pas trouvé → Inclure (ex: pas de publicité)
+- Si `MustExist=false` et l'élément est trouvé → Inclure (ex: titre trouvé)
+- Si `MustExist=false` et l'élément n'est pas trouvé → Exclure (ex: titre manquant)
+
+## Configuration
+
+### Base de données
+L'application utilise SQLite par défaut. La configuration se trouve dans `appsettings.json` :
+
+```json
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Data Source=HierarchScraper.db"
+  }
+}
+```
+
+### Exemple de configuration de scraping
+
+```json
+{
+  "ListSelector": "#job-listings",
+  "NextPageSelector": ".pagination-next",
+  "ItemConfig": {
+    "ItemSelector": ".job-item",
+    "ExclusionRules": [
+      {
+        "Selector": ".advertisement",
+        "MustExist": true
+      },
+      {
+        "Selector": ".job-title",
+        "MustExist": false
+      }
+    ],
+    "TitleSelector": ".job-title",
+    "DetailSelector": ".job-link"
+  }
+}
+```
+
+## API Endpoints
+
+### Sources de scraping
+- `GET /api/scraping/sources` - Liste toutes les sources
+- `POST /api/scraping/sources` - Crée une nouvelle source
+- `POST /api/scraping/sources/{id}/scrape` - Lance le scraping pour une source spécifique
+- `POST /api/scraping/scrape-all` - Lance le scraping pour toutes les sources actives
+
+### Offres d'emploi
+- `GET /api/vacancies` - Liste toutes les offres
+- `GET /api/vacancies/{id}` - Récupère une offre spécifique
+
+## Technologies utilisées
+
+- **.NET 8**
+- **Entity Framework Core** (avec SQLite)
+- **AngleSharp** (pour le parsing HTML)
+- **ASP.NET Core Web API**
+- **SOLID Principles**
+- **Repository Pattern**
+
+## Installation et exécution
+
+1. Cloner le dépôt
+2. Exécuter `dotnet restore`
+3. Exécuter `dotnet build`
+4. Appliquer les migrations : `dotnet ef database update --project HierarchScraper.Infrastructure --startup-project HierarchScraper.API`
+5. Démarrer l'application : `dotnet run --project HierarchScraper.API`
+
+L'API sera disponible sur `https://localhost:5001` (ou `http://localhost:5000`).
+
+## Tests
+
+L'architecture suit les principes SOLID pour faciliter les tests unitaires. Vous pouvez facilement mock les interfaces pour tester les différents composants.
+
+## 📁 Structure du projet
+
+```
+HierarchScraper/
+├── HierarchScraper.Core/          # Modèles et interfaces
+├── HierarchScraper.Infrastructure/ # Implémentation (scraping, DB)
+├── HierarchScraper.API/           # API REST
+└── HierarchScraper.db             # Base de données SQLite
+```
+
+## Futur projet MVC
+
+Si vous souhaitez ajouter une interface utilisateur MVC plus tard, vous pourrez créer un nouveau projet `HierarchScraper.Web` ou `HierarchScraper.MVC` qui consommera l'API REST existante. Cela permettra une séparation claire entre :
+
+- **Backend** : HierarchScraper.API (API REST)
+- **Frontend** : HierarchScraper.Web (MVC/Blazor)
+
+Cette architecture permet une meilleure scalabilité et une séparation des préoccupations.
+
+## Contribution
+
+Les contributions sont les bienvenues ! Veuillez suivre les principes SOLID et maintenir une bonne couverture de tests.
