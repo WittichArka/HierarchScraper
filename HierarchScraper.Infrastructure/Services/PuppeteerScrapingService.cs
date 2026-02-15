@@ -1,7 +1,10 @@
 using System.Text.Json;
+using AngleSharp;
+using AngleSharp.Dom;
 using HierarchScraper.Core.Configurations;
 using HierarchScraper.Core.Interfaces;
 using HierarchScraper.Core.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
 
@@ -22,7 +25,7 @@ public class PuppeteerScrapingService : IScrapingService
         IVacancyRepository vacancyRepository,
         IScrapingSourceRepository sourceRepository,
         ILogger<PuppeteerScrapingService> logger,
-        IConfiguration configuration)
+        Microsoft.Extensions.Configuration.IConfiguration configuration)
     {
         _vacancyRepository = vacancyRepository;
         _sourceRepository = sourceRepository;
