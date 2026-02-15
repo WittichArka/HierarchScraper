@@ -49,12 +49,29 @@ L'application utilise SQLite par défaut. La configuration se trouve dans `appse
 }
 ```
 
+### Configuration Puppeteer
+PuppeteerSharp est utilisé pour le scraping. Vous pouvez configurer ses options dans `appsettings.json` :
+
+```json
+{
+  "Puppeteer": {
+    "Headless": true,                    // Exécuter en mode headless (sans interface)
+    "Timeout": 30000,                    // Timeout en millisecondes
+    "WaitForSelectorTimeout": 10000,    // Timeout pour l'attente des sélecteurs
+    "ExecutablePath": "",               // Chemin vers l'exécutable Chromium (laisser vide pour téléchargement automatique)
+    "UserAgent": "Mozilla/5.0..."        // User Agent pour éviter la détection
+  }
+}
+```
+
 ### Exemple de configuration de scraping
+
+#### Pour les sites statiques simples :
 
 ```json
 {
   "ListSelector": "#job-listings",
-  "NextPageSelector": ".pagination-next",
+  "NextPageSelector": "a[aria-label='Suivant']",
   "ItemConfig": {
     "ItemSelector": ".job-item",
     "ExclusionRules": [
@@ -73,6 +90,28 @@ L'application utilise SQLite par défaut. La configuration se trouve dans `appse
 }
 ```
 
+#### Pour Indeed (site dynamique) :
+
+```json
+{
+  "ListSelector": "#mosaic-provider-jobcards",
+  "NextPageSelector": "a[data-testid='pagination-page-next']",
+  "ItemConfig": {
+    "ItemSelector": ".job_seen_beacon",
+    "ExclusionRules": [
+      {
+        "Selector": ".sponsored",
+        "MustExist": true
+      }
+    ],
+    "TitleSelector": "h2.jobTitle",
+    "DetailSelector": "a[jk]"
+  }
+}
+```
+
+**Note** : Avec PuppeteerSharp, vous pouvez utiliser les mêmes sélecteurs pour les sites statiques et dynamiques. Le navigateur headless charge le contenu JavaScript avant l'analyse.
+
 ## API Endpoints
 
 ### Sources de scraping
@@ -89,10 +128,19 @@ L'application utilise SQLite par défaut. La configuration se trouve dans `appse
 
 - **.NET 8**
 - **Entity Framework Core** (avec SQLite)
-- **AngleSharp** (pour le parsing HTML)
+- **PuppeteerSharp** (pour le scraping des pages statiques et dynamiques)
 - **ASP.NET Core Web API**
 - **SOLID Principles**
 - **Repository Pattern**
+
+## Exigences système
+
+Pour exécuter cette application avec PuppeteerSharp, vous avez besoin de :
+
+- **.NET 8 SDK**
+- **Chromium** (téléchargé automatiquement par PuppeteerSharp)
+- **Mémoire** : Minimum 2GB (4GB recommandé pour le scraping intensif)
+- **Espace disque** : 500MB pour Chromium + espace pour la base de données
 
 ## Installation et exécution
 
@@ -103,6 +151,8 @@ L'application utilise SQLite par défaut. La configuration se trouve dans `appse
 5. Démarrer l'application : `dotnet run --project HierarchScraper.API`
 
 L'API sera disponible sur `https://localhost:5001` (ou `http://localhost:5000`).
+
+**Première exécution** : PuppeteerSharp téléchargera automatiquement Chromium (environ 200MB).
 
 ## Tests
 

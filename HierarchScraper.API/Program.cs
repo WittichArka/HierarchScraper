@@ -11,8 +11,8 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<HierarchScraper.Infrastructure.Data.ApplicationDbContext>(options =>
     options.UseSqlite(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-// Add application services
-builder.Services.AddScoped<HierarchScraper.Core.Interfaces.IScrapingService, HierarchScraper.Infrastructure.Services.ScrapingService>();
+// Add application services - Using Puppeteer implementation
+builder.Services.AddScoped<HierarchScraper.Core.Interfaces.IScrapingService, HierarchScraper.Infrastructure.Services.PuppeteerScrapingService>();
 
 // Add repository services (to be implemented)
 builder.Services.AddScoped<HierarchScraper.Core.Interfaces.IVacancyRepository, HierarchScraper.Infrastructure.Repositories.VacancyRepository>();
