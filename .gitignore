@@ -80,6 +80,9 @@ node_modules/
 # HTML files in API directory
 HierarchScraper.API/*.html
 
+# Logs directory in API
+HierarchScraper.API/Logs/
+
 # Test results
 TestResults/
 
