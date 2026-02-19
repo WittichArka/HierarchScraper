@@ -1,0 +1,135 @@
+[2026-02-18 00:19:32.180 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-18 00:19:32.614 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-18 00:19:32.629 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-18 00:19:32.693 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-18 00:19:32.752 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-18 00:19:32.815 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-18 01:04:15.198 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 01:04:31.034 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 01:05:35.666 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+PuppeteerSharp.TargetClosedException: Protocol error (Runtime.callFunctionOn): Session closed. Most likely the Page has been closed.Close reason: Target.detachedFromTarget (Target.detachedFromTarget)
+   at PuppeteerSharp.Cdp.CdpCDPSession.SendAsync(String method, Object args, Boolean waitForCallback, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpCDPSession.cs:line 78
+   at PuppeteerSharp.CDPSession.SendAsync[T](String method, Object args, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/CDPSession.cs:line 48
+   at PuppeteerSharp.ExecutionContext.ExecuteEvaluationAsync(String method, Object args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 217
+   at PuppeteerSharp.ExecutionContext.EvaluateFunctionInternalAsync(Boolean returnByValue, String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 203
+   at PuppeteerSharp.ExecutionContext.RemoteObjectTaskToObject[T](Task`1 remote) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 188
+   at PuppeteerSharp.IsolatedWorld.EvaluateFunctionAsync[T](String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/IsolatedWorld.cs:line 218
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 65
+[2026-02-18 01:06:52.624 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 01:07:04.738 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 01:07:41.048 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+PuppeteerSharp.TargetClosedException: Protocol error (Runtime.callFunctionOn): Session closed. Most likely the Page has been closed.Close reason: Target.detachedFromTarget (Target.detachedFromTarget)
+   at PuppeteerSharp.Cdp.CdpCDPSession.SendAsync(String method, Object args, Boolean waitForCallback, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpCDPSession.cs:line 78
+   at PuppeteerSharp.CDPSession.SendAsync[T](String method, Object args, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/CDPSession.cs:line 48
+   at PuppeteerSharp.ExecutionContext.ExecuteEvaluationAsync(String method, Object args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 217
+   at PuppeteerSharp.ExecutionContext.EvaluateFunctionInternalAsync(Boolean returnByValue, String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 203
+   at PuppeteerSharp.ExecutionContext.RemoteObjectTaskToObject[T](Task`1 remote) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 188
+   at PuppeteerSharp.IsolatedWorld.EvaluateFunctionAsync[T](String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/IsolatedWorld.cs:line 218
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 65
+[2026-02-18 12:58:26.034 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-18 12:58:26.374 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-18 12:58:26.390 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-18 12:58:26.451 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-18 12:58:26.478 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-18 12:58:26.503 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-18 13:00:22.667 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 13:00:39.874 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 13:01:20.790 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+PuppeteerSharp.TargetClosedException: Protocol error (Runtime.callFunctionOn): Session closed. Most likely the Page has been closed.Close reason: Target.detachedFromTarget (Target.detachedFromTarget)
+   at PuppeteerSharp.Cdp.CdpCDPSession.SendAsync(String method, Object args, Boolean waitForCallback, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpCDPSession.cs:line 78
+   at PuppeteerSharp.CDPSession.SendAsync[T](String method, Object args, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/CDPSession.cs:line 48
+   at PuppeteerSharp.ExecutionContext.ExecuteEvaluationAsync(String method, Object args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 217
+   at PuppeteerSharp.ExecutionContext.EvaluateFunctionInternalAsync(Boolean returnByValue, String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 203
+   at PuppeteerSharp.ExecutionContext.RemoteObjectTaskToObject[T](Task`1 remote) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 188
+   at PuppeteerSharp.IsolatedWorld.EvaluateFunctionAsync[T](String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/IsolatedWorld.cs:line 218
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 65
+[2026-02-18 13:08:02.281 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-18 13:08:02.731 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-18 13:08:02.789 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-18 13:08:02.811 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-18 13:08:02.828 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-18 13:08:02.844 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-18 13:13:44.763 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 13:14:38.476 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 13:16:28.096 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+PuppeteerSharp.TargetClosedException: Protocol error (Runtime.callFunctionOn): Session closed. Most likely the Page has been closed.Close reason: Target.detachedFromTarget (Target.detachedFromTarget)
+   at PuppeteerSharp.Cdp.CdpCDPSession.SendAsync(String method, Object args, Boolean waitForCallback, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpCDPSession.cs:line 78
+   at PuppeteerSharp.CDPSession.SendAsync[T](String method, Object args, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/CDPSession.cs:line 48
+   at PuppeteerSharp.ExecutionContext.ExecuteEvaluationAsync(String method, Object args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 217
+   at PuppeteerSharp.ExecutionContext.EvaluateFunctionInternalAsync(Boolean returnByValue, String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 203
+   at PuppeteerSharp.ExecutionContext.RemoteObjectTaskToObject[T](Task`1 remote) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 188
+   at PuppeteerSharp.IsolatedWorld.EvaluateFunctionAsync[T](String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/IsolatedWorld.cs:line 218
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 65
+[2026-02-18 13:16:34.131 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 13:18:09.313 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 13:31:16.252 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-18 13:31:16.636 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-18 13:31:16.660 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-18 13:31:16.750 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-18 13:31:16.766 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-18 13:31:16.807 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-18 13:32:51.800 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 13:33:34.732 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 13:35:19.282 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Found 16 items on page 1
+[2026-02-18 13:38:54.964 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Li%C3%A8ge&radius=25&start=10 (Attempt 1)
+[2026-02-18 13:39:57.116 Warning] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Timeout waiting for selector: #mosaic-provider-jobcards
+[2026-02-18 13:42:56.370 Warning] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Selector #mosaic-provider-jobcards not found on page
+[2026-02-18 14:15:29.404 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-18 14:15:29.932 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-18 14:15:29.966 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-18 14:15:30.041 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-18 14:15:30.061 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-18 14:15:30.119 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-18 14:16:23.253 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 14:18:11.290 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 14:26:13.471 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+PuppeteerSharp.TargetClosedException: Protocol error(Runtime.callFunctionOn): Target closed. (Connection failed to process Target.attachedToTarget. Timeout of 1000 ms exceeded.    at PuppeteerSharp.Helpers.TaskHelper.WithTimeout[T](Task`1 task, TimeSpan timeout, Func`2 exceptionFactory) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Helpers/TaskHelper.cs:line 186
+   at PuppeteerSharp.Cdp.FrameManager.<>c__DisplayClass58_0.<<Client_MessageReceived>b__0>d.MoveNext() in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/FrameManager.cs:line 208)
+   at PuppeteerSharp.Helpers.TaskHelper.WithTimeout[T](Task`1 task, TimeSpan timeout, Func`2 exceptionFactory) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Helpers/TaskHelper.cs:line 189
+   at PuppeteerSharp.Cdp.CdpCDPSession.SendAsync(String method, Object args, Boolean waitForCallback, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpCDPSession.cs:line 113
+   at PuppeteerSharp.CDPSession.SendAsync[T](String method, Object args, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/CDPSession.cs:line 48
+   at PuppeteerSharp.ExecutionContext.ExecuteEvaluationAsync(String method, Object args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 217
+   at PuppeteerSharp.ExecutionContext.EvaluateFunctionInternalAsync(Boolean returnByValue, String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 203
+   at PuppeteerSharp.ExecutionContext.RemoteObjectTaskToObject[T](Task`1 remote) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/ExecutionContext.cs:line 188
+   at PuppeteerSharp.IsolatedWorld.EvaluateFunctionAsync[T](String script, Object[] args) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/IsolatedWorld.cs:line 218
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 65
+[2026-02-18 14:29:06.739 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 14:29:36.865 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Informaticien
+[2026-02-18 14:35:51.096 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+PuppeteerSharp.ProcessException: Failed to launch browser! 
+   at PuppeteerSharp.States.ProcessStartingState.StartCoreAsync(LauncherBase p) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/States/ProcessStartingState.cs:line 81
+   at PuppeteerSharp.States.ProcessStartingState.StartCoreAsync(LauncherBase p) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/States/ProcessStartingState.cs:line 87
+   at PuppeteerSharp.Launcher.LaunchAsync(LaunchOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Launcher.cs:line 94
+   at PuppeteerSharp.Launcher.LaunchAsync(LaunchOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Launcher.cs:line 142
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.EnsureBrowserInitialized() in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 141
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 47
+[2026-02-18 14:36:01.307 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 1)
+[2026-02-18 14:37:29.645 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error loading page with Puppeteer (Attempt 1)
+PuppeteerSharp.NavigationException: Navigating frame was detached: Target.detachedFromTarget
+ ---> PuppeteerSharp.PuppeteerException: Navigating frame was detached: Target.detachedFromTarget
+   at PuppeteerSharp.Helpers.TaskHelper.WithTimeout(Task task, Func`1 timeoutAction, TimeSpan timeout, CancellationToken cancellationToken) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Helpers/TaskHelper.cs:line 107
+   at PuppeteerSharp.Cdp.CdpFrame.GoToAsync(String url, NavigationOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpFrame.cs:line 107
+   --- End of inner exception stack trace ---
+   at PuppeteerSharp.Cdp.CdpFrame.GoToAsync(String url, NavigationOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpFrame.cs:line 111
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.LoadPageWithPuppeteer(String url, String mainContentSelector) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 184
+[2026-02-18 14:37:39.862 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège (Attempt 2)
+[2026-02-18 14:38:04.490 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error loading page with Puppeteer (Attempt 2)
+PuppeteerSharp.NavigationException: Navigating frame was detached: Target.detachedFromTarget
+ ---> PuppeteerSharp.PuppeteerException: Navigating frame was detached: Target.detachedFromTarget
+   at PuppeteerSharp.Helpers.TaskHelper.WithTimeout(Task task, Func`1 timeoutAction, TimeSpan timeout, CancellationToken cancellationToken) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Helpers/TaskHelper.cs:line 107
+   --- End of inner exception stack trace ---
+   at PuppeteerSharp.Cdp.CdpFrame.GoToAsync(String url, NavigationOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpFrame.cs:line 111
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.LoadPageWithPuppeteer(String url, String mainContentSelector) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 184
+[2026-02-18 14:38:16.174 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error loading page with Puppeteer (Attempt 3)
+PuppeteerSharp.TargetClosedException: Protocol error (Performance.enable): Session closed. Most likely the Page has been closed.Close reason: Target.detachedFromTarget (Target.detachedFromTarget)
+   at PuppeteerSharp.Cdp.CdpCDPSession.SendAsync(String method, Object args, Boolean waitForCallback, CommandOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpCDPSession.cs:line 78
+   at PuppeteerSharp.Cdp.CdpPage.InitializeAsync() in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpPage.cs:line 1287
+   at PuppeteerSharp.Cdp.CdpPage.CreateAsync(CdpCDPSession client, CdpTarget target, ViewPortOptions defaultViewPort, TaskQueue screenshotTaskQueue) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpPage.cs:line 718
+   at PuppeteerSharp.Cdp.CdpPage.CreateAsync(CdpCDPSession client, CdpTarget target, ViewPortOptions defaultViewPort, TaskQueue screenshotTaskQueue) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpPage.cs:line 730
+   at PuppeteerSharp.Cdp.CdpPageTarget.PageAsync() in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpPageTarget.cs:line 46
+   at PuppeteerSharp.Cdp.CdpBrowser.CreatePageInContextAsync(String contextId) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpBrowser.cs:line 209
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.LoadPageWithPuppeteer(String url, String mainContentSelector) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 174
+[2026-02-18 14:38:16.772 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Failed to load page after 3 attempts
+[2026-02-18 14:38:57.061 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Informaticien
+System.NullReferenceException: Object reference not set to an instance of an object.
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 65

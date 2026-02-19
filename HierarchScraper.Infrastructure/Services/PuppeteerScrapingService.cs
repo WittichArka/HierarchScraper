@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Threading;
 using AngleSharp;
 using AngleSharp.Dom;
 using HierarchScraper.Core.Configurations;
@@ -10,16 +11,15 @@ using PuppeteerSharp;
 
 namespace HierarchScraper.Infrastructure.Services;
 
-/// <summary>
-/// Service de scraping utilisant PuppeteerSharp pour gérer à la fois les pages statiques et dynamiques
-/// </summary>
-public class PuppeteerScrapingService : IScrapingService
+public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
 {
     private readonly IVacancyRepository _vacancyRepository;
     private readonly IScrapingSourceRepository _sourceRepository;
     private readonly ILogger<PuppeteerScrapingService> _logger;
     private readonly PuppeteerOptions _puppeteerOptions;
+    private readonly SemaphoreSlim _browserSemaphore = new SemaphoreSlim(1, 1);
     private IBrowser? _browser;
+    private readonly Random _random = new Random();
 
     public PuppeteerScrapingService(
         IVacancyRepository vacancyRepository,
@@ -30,8 +30,6 @@ public class PuppeteerScrapingService : IScrapingService
         _vacancyRepository = vacancyRepository;
         _sourceRepository = sourceRepository;
         _logger = logger;
-
-        // Charger la configuration Puppeteer
         _puppeteerOptions = configuration.GetSection("Puppeteer").Get<PuppeteerOptions>() ?? new PuppeteerOptions();
     }
 
@@ -46,77 +44,60 @@ public class PuppeteerScrapingService : IScrapingService
         try
         {
             _logger.LogInformation("Starting scraping for source: {SourceName}", source.Name);
+            await EnsureBrowserInitialized();
 
             var config = JsonSerializer.Deserialize<ScrapingConfiguration>(source.ScrapingConfig);
-            if (config == null)
-            {
-                _logger.LogError("Invalid scraping configuration for source: {SourceName}", source.Name);
-                return Enumerable.Empty<Vacancy>();
-            }
+            if (config == null) return Enumerable.Empty<Vacancy>();
 
             var vacancies = new List<Vacancy>();
             var currentUrl = source.Url;
             var processedUrls = new HashSet<string>();
 
-            // Initialiser le navigateur si ce n'est pas déjà fait
-            await EnsureBrowserInitialized();
-
-            while (!string.IsNullOrEmpty(currentUrl) && !processedUrls.Contains(currentUrl))
+            // Limite de sécurité pour éviter les boucles infinies
+            int pageCount = 0;
+            while (!string.IsNullOrEmpty(currentUrl) && !processedUrls.Contains(currentUrl) && pageCount < 10)
             {
                 processedUrls.Add(currentUrl);
-                _logger.LogInformation("Processing page: {Url}", currentUrl);
+                pageCount++;
 
-                // Charger la page avec Puppeteer
-                var pageHtml = await LoadPageWithPuppeteer(currentUrl, config.ListSelector);
-                if (string.IsNullOrEmpty(pageHtml))
+                var page = await LoadPageWithPuppeteer(currentUrl, config.ListSelector); 
+
+                var pageHtml = await page.GetContentAsync();                
+                if (string.IsNullOrEmpty(pageHtml)) 
                 {
-                    _logger.LogWarning("Could not load page content for: {Url}", currentUrl);
+                    _logger.LogWarning("Page content is empty for URL: {Url}", currentUrl);
                     break;
                 }
+                await SaveToFile(pageHtml);
 
-                // Parser le HTML avec AngleSharp pour l'analyse
-                var context = BrowsingContext.New(Configuration.Default.WithDefaultLoader());
+                var context = BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader());
                 var document = await context.OpenAsync(req => req.Content(pageHtml));
-
-                // Trouver la liste principale
                 var listElement = document.QuerySelector(config.ListSelector);
+
                 if (listElement == null)
                 {
-                    _logger.LogWarning("List element not found with selector: {Selector}", config.ListSelector);
+                    _logger.LogWarning("Selector {Selector} not found on page", config.ListSelector);
                     break;
                 }
 
-                // Traiter chaque item
                 var items = listElement.QuerySelectorAll(config.ItemConfig.ItemSelector);
-                _logger.LogInformation("Found {Count} items on page", items.Length);
+                _logger.LogInformation("Found {Count} items on page {Page}", items.Length, pageCount);
 
                 foreach (var item in items)
                 {
-                    if (ShouldExcludeItem(item, config.ItemConfig.ExclusionRules))
-                    {
-                        continue;
-                    }
-
+                    Console.WriteLine(item.InnerHtml);
+                    if (ShouldExcludeItem(item, config.ItemConfig.ExclusionRules)) continue;
                     var vacancy = ExtractVacancyFromItem(item, config.ItemConfig, source);
-                    if (vacancy != null)
-                    {
-                        vacancies.Add(vacancy);
-                    }
+                    if (vacancy != null) vacancies.Add(vacancy);
                 }
 
-                // Trouver l'URL de la page suivante
-                currentUrl = await GetNextPageUrlWithPuppeteer(currentUrl, config.NextPageSelector);
+                currentUrl = await GetNextPageUrlWithPuppeteer(page, config.NextPageSelector);
+
+                if (page != null) await page.CloseAsync();
+                page = null;
             }
 
-            // Sauvegarder toutes les offres dans la base de données
-            foreach (var vacancy in vacancies)
-            {
-                await _vacancyRepository.AddAsync(vacancy);
-            }
-
-            _logger.LogInformation("Completed scraping for source: {SourceName}. Found {Count} vacancies", 
-                source.Name, vacancies.Count);
-            
+            foreach (var v in vacancies) await _vacancyRepository.AddAsync(v);
             return vacancies;
         }
         catch (Exception ex)
@@ -126,251 +107,192 @@ public class PuppeteerScrapingService : IScrapingService
         }
     }
 
-    public async Task ProcessAllActiveSourcesAsync()
+    private async Task SaveToFile(string someText)
     {
-        var sources = await _sourceRepository.GetActiveSourcesAsync();
-        
-        foreach (var source in sources)
-        {
-            try
-            {
-                await ScrapeSourceAsync(source);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing source: {SourceName}", source.Name);
-            }
-        }
+        var dt = DateTime.Now;
+        using (var fs = new FileStream($".\\{dt.ToFileTime()}.html", FileMode.CreateNew))
+        using (var sw = new StreamWriter(fs))
+            sw.WriteLine(someText);
     }
 
     private async Task EnsureBrowserInitialized()
     {
-        if (_browser != null) return;
+        if (_browser != null && !_browser.IsClosed) return;
 
+        await _browserSemaphore.WaitAsync();
         try
         {
-            _logger.LogInformation("Initializing Puppeteer browser...");
-            
-            // Télécharger Chromium si nécessaire
-            var browserFetcher = new BrowserFetcher();
-            await browserFetcher.DownloadAsync();
+            if (_browser != null && !_browser.IsClosed) return;
 
+            var browserPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PuppeteerSharp");
+            var browserFetcher = new BrowserFetcher(new BrowserFetcherOptions { Path = browserPath });
+            
+            var installedBrowsers = browserFetcher.GetInstalledBrowsers();
+            if (!installedBrowsers.Any())
+            {
+                _logger.LogInformation("Downloading browser...");
+                await browserFetcher.DownloadAsync();
+                installedBrowsers = browserFetcher.GetInstalledBrowsers();
+            }
+
+            var executablePath = installedBrowsers.First().GetExecutablePath();
+
+            string userDataDir = _puppeteerOptions.UserDataSavePath;
             _browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
                 Headless = _puppeteerOptions.Headless,
+                ExecutablePath = executablePath,
+                UserDataDir = userDataDir,
                 Args = new[]
                 {
                     "--no-sandbox",
                     "--disable-setuid-sandbox",
                     "--disable-dev-shm-usage",
-                    "--disable-accelerated-2d-canvas",
-                    "--disable-gpu",
-                    "--window-size=1920,1080"
+                    "--disable-blink-features=AutomationControlled", // Cache le mode automation
+                    "--window-size=1280,800"
                 },
-                ExecutablePath = _puppeteerOptions.ExecutablePath,
                 Timeout = _puppeteerOptions.Timeout
             });
-
-            _logger.LogInformation("Puppeteer browser initialized successfully");
         }
-        catch (Exception ex)
+        finally
         {
-            _logger.LogError(ex, "Failed to initialize Puppeteer browser");
-            throw;
+            _browserSemaphore.Release();
         }
     }
 
-    private async Task<string> LoadPageWithPuppeteer(string url, string mainContentSelector)
+    private async Task<IPage?> LoadPageWithPuppeteer(string url, string mainContentSelector)
     {
-        if (_browser == null)
+        if (_browser == null) return null;
+        IPage? page = null;
+        int retryCount = 0;
+        const int maxRetries = 3;
+        
+        while (retryCount < maxRetries)
         {
-            _logger.LogError("Browser not initialized");
-            return string.Empty;
-        }
-
-        try
-        {
-            using var page = await _browser.NewPageAsync();
-
-            // Configurer la page pour éviter la détection
-            await page.SetUserAgentAsync(_puppeteerOptions.UserAgent);
-            await page.SetExtraHttpHeadersAsync(new Dictionary<string, string>
+            try
             {
-                ["Accept-Language"] = "fr-FR,fr;q=0.9,en-US;q=0.8,en;q=0.7"
-            });
+                page = await _browser.NewPageAsync();
+                
+                // Simulation humaine
+                await page.SetUserAgentAsync("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36");
+                await page.SetViewportAsync(new ViewPortOptions { Width = 1280, Height = 800 });
 
-            // Naviguer vers la page
-            _logger.LogDebug("Navigating to: {Url}", url);
-            await page.GoToAsync(url, new NavigationOptions
-            {
-                WaitUntil = new[] { WaitUntilNavigation.Networkidle2 },
-                Timeout = _puppeteerOptions.Timeout
-            });
+                // Injection de script pour masquer Puppeteer
+                await page.EvaluateFunctionOnNewDocumentAsync("() => { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); }");
 
-            // Attendre que le contenu principal soit chargé
-            if (!string.IsNullOrEmpty(mainContentSelector))
-            {
-                try
+                _logger.LogInformation("Loading URL: {Url} (Attempt {Attempt})", url, retryCount + 1);
+                await page.GoToAsync(url, new NavigationOptions {
+                    WaitUntil = new[] { WaitUntilNavigation.Networkidle2 },
+                    Timeout = _puppeteerOptions.Timeout
+                });
+
+                // Délai aléatoire entre 2 et 5 secondes
+                await Task.Delay(_random.Next(2000, 5000));
+
+                if (!string.IsNullOrEmpty(mainContentSelector))
                 {
-                    await page.WaitForSelectorAsync(mainContentSelector, new WaitForSelectorOptions
+                    try 
                     {
-                        Timeout = _puppeteerOptions.WaitForSelectorTimeout
-                    });
-                    _logger.LogDebug("Main content loaded successfully");
+                        await page.WaitForSelectorAsync(mainContentSelector, new WaitForSelectorOptions { Timeout = _puppeteerOptions.WaitForSelectorTimeout }); 
+                    }
+                    catch 
+                    {
+                        _logger.LogWarning("Timeout waiting for selector: {Sel}", mainContentSelector); 
+                    }
                 }
-                catch (WaitTaskTimeoutException)
-                {
-                    _logger.LogWarning("Main content selector not found within timeout");
-                }
+                return page;
             }
-
-            // Attendre un peu pour permettre le chargement des éléments dynamiques
-            await Task.Delay(1000);
-
-            // Récupérer le HTML complet
-            return await page.GetContentAsync();
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading page with Puppeteer (Attempt {Attempt})", retryCount + 1);
+                if (retryCount < maxRetries - 1)
+                {
+                    await Task.Delay(_random.Next(2000, 5000));
+                }
+                if (page != null) await page.CloseAsync();
+            }
+            
+            retryCount++;
         }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error loading page with Puppeteer: {Url}", url);
-            return string.Empty;
-        }
+        
+        _logger.LogError("Failed to load page after {MaxRetries} attempts", maxRetries);
+        return null;
     }
 
-    private async Task<string?> GetNextPageUrlWithPuppeteer(string currentUrl, string nextPageSelector)
+    private async Task<string?> GetNextPageUrlWithPuppeteer(IPage page, string nextPageSelector)
     {
-        if (string.IsNullOrEmpty(nextPageSelector) || _browser == null)
-        {
-            return null;
-        }
+        // 1. Validation de base
+        if (string.IsNullOrEmpty(nextPageSelector) || page == null) return null;
 
         try
         {
-            using var page = await _browser.NewPageAsync();
-            
-            // Naviguer vers la page actuelle
-            await page.GoToAsync(currentUrl, new NavigationOptions
-            {
-                WaitUntil = new[] { WaitUntilNavigation.Networkidle0 },
-                Timeout = _puppeteerOptions.Timeout
-            });
-
-            // Attendre que le sélecteur de page suivante soit disponible
-            await page.WaitForSelectorAsync(nextPageSelector, new WaitForSelectorOptions
-            {
-                Timeout = _puppeteerOptions.WaitForSelectorTimeout,
-                Visible = true
-            });
-
-            // Récupérer l'URL du bouton suivant
+            // 2. Extraction de l'attribut href via le navigateur
+            // On utilise 'property' plutôt que 'attribute' pour avoir l'URL absolue directement via le DOM
             var nextPageUrl = await page.EvaluateFunctionAsync<string>(
-                "(selector) => document.querySelector(selector)?.href", 
-                nextPageSelector);
+                @"(s) => { 
+                    const el = document.querySelector(s);
+                    return el ? el.href : null; 
+                }", 
+                nextPageSelector
+            );
 
-            if (string.IsNullOrEmpty(nextPageUrl))
-            {
-                _logger.LogDebug("Next page button found but href is empty");
-                return null;
-            }
+            if (string.IsNullOrEmpty(nextPageUrl)) return null;
 
-            // Gérer les URLs relatives
+            // 3. Puppeteer renvoie souvent l'URL absolue via .href, 
+            // mais au cas où, on sécurise la reconstruction
             if (!nextPageUrl.StartsWith("http"))
             {
-                var baseUri = new Uri(currentUrl);
-                nextPageUrl = new Uri(baseUri, nextPageUrl).AbsoluteUri;
+                return new Uri(new Uri(page.Url), nextPageUrl).AbsoluteUri;
             }
 
             return nextPageUrl;
         }
-        catch (WaitTaskTimeoutException)
-        {
-            _logger.LogDebug("No next page button found - assuming this is the last page");
-            return null;
-        }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error getting next page URL");
+            // Optionnel : logger l'erreur ex pour le debug
             return null;
         }
+        // Note : On ne ferme PAS la page ici, car le scraper en aura besoin pour la suite.
     }
 
-    private bool ShouldExcludeItem(IElement item, List<ExclusionRule> exclusionRules)
+    private bool ShouldExcludeItem(IElement item, List<ExclusionRule> rules)
     {
-        if (exclusionRules == null || exclusionRules.Count == 0)
-        {
-            return false;
-        }
-
-        foreach (var rule in exclusionRules)
-        {
-            var elements = item.QuerySelectorAll(rule.Selector);
-            bool hasElements = elements.Length > 0;
-
-            // Logique d'exclusion comme spécifié
-            if ((hasElements && rule.MustExist) || (!hasElements && !rule.MustExist))
-            {
-                return true; // Exclure cet item
-            }
-        }
-
-        return false;
+        if (rules == null || !rules.Any()) return false;
+        return rules.Any(r => (item.QuerySelectorAll(r.Selector).Length > 0 && r.MustExist) || (item.QuerySelectorAll(r.Selector).Length == 0 && !r.MustExist));
     }
 
-    private Vacancy? ExtractVacancyFromItem(IElement item, ItemConfiguration itemConfig, ScrapingSource source)
+    private Vacancy? ExtractVacancyFromItem(IElement item, ItemConfiguration config, ScrapingSource source)
     {
-        try
+        var titleEl = item.QuerySelector(config.TitleSelector);
+        var keyEl = item.QuerySelector($"[{config.JobKeyAttribute}]");
+        string keyElValue = keyEl.GetAttribute(config.JobKeyAttribute) ?? string.Empty;
+
+        if (titleEl == null || string.IsNullOrEmpty(keyElValue)) return null;
+
+        var url = string.Format(config.DetailUrlTemplate, keyElValue);
+        return new Vacancy
         {
-            var titleElement = item.QuerySelector(itemConfig.TitleSelector);
-            var detailElement = item.QuerySelector(itemConfig.DetailSelector);
+            Name = titleEl.TextContent.Trim(),
+            DetailUrl = url.StartsWith("http") ? url : new Uri(new Uri(source.Url), url).AbsoluteUri,
+            SourcePlatform = source.Platform,
+            ScrapingSourceId = source.Id,
+            CreatedDate = DateTime.UtcNow
+        };
+    }
 
-            if (titleElement == null || detailElement == null)
-            {
-                _logger.LogDebug("Item missing required elements (title or detail)");
-                return null;
-            }
-
-            var title = titleElement.TextContent.Trim();
-            var detailUrl = detailElement.GetAttribute("href") ?? string.Empty;
-
-            // Gérer les URLs relatives
-            if (!string.IsNullOrEmpty(detailUrl) && !detailUrl.StartsWith("http"))
-            {
-                var baseUri = new Uri(source.Url);
-                detailUrl = new Uri(baseUri, detailUrl).AbsoluteUri;
-            }
-
-            return new Vacancy
-            {
-                Name = title,
-                DetailUrl = detailUrl,
-                SourcePlatform = source.Platform,
-                ScrapingSourceId = source.Id,
-                CreatedDate = DateTime.UtcNow
-            };
-        }
-        catch (Exception ex)
-        {
-            _logger.LogError(ex, "Error extracting vacancy from item");
-            return null;
-        }
+    public async Task ProcessAllActiveSourcesAsync()
+    {
+        var sources = await _sourceRepository.GetActiveSourcesAsync();
+        foreach (var s in sources) await ScrapeSourceAsync(s);
     }
 
     public async ValueTask DisposeAsync()
     {
-        if (_browser != null)
-        {
-            try
-            {
-                await _browser.CloseAsync();
-                _logger.LogInformation("Puppeteer browser closed");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error closing Puppeteer browser");
-            }
-        }
+        if (_browser != null) await _browser.CloseAsync();
+        _browserSemaphore.Dispose();
     }
 }
+
 
 public class PuppeteerOptions
 {
@@ -378,5 +300,6 @@ public class PuppeteerOptions
     public int Timeout { get; set; } = 30000;
     public int WaitForSelectorTimeout { get; set; } = 10000;
     public string ExecutablePath { get; set; } = string.Empty;
-    public string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36";
+    public string UserAgent { get; set; } = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
+    public string UserDataSavePath { get; set; } = string.Empty;
 }

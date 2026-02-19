@@ -1,0 +1,21 @@
+[2026-02-16 00:05:39.636 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-16 00:05:40.032 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-16 00:05:40.191 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-16 00:05:40.414 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-16 00:05:40.482 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-16 00:05:41.015 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-16 00:06:53.714 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Indeed Belgium
+[2026-02-16 00:11:28.814 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège
+[2026-02-16 00:25:00.447 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Found 16 items on page 1
+[2026-02-16 00:49:38.330 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Indeed Belgium
+[2026-02-16 00:50:01.042 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège
+[2026-02-16 00:53:21.350 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error loading page with Puppeteer
+PuppeteerSharp.NavigationException: Navigation timeout of 60000 ms exceeded
+ ---> System.TimeoutException: Navigation timeout of 60000 ms exceeded
+   at PuppeteerSharp.Helpers.TaskHelper.<>c__DisplayClass6_0.<WithTimeout>b__0() in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Helpers/TaskHelper.cs:line 54
+   at PuppeteerSharp.Helpers.TaskHelper.WithTimeout(Task task, Func`1 timeoutAction, TimeSpan timeout, CancellationToken cancellationToken) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Helpers/TaskHelper.cs:line 101
+   at PuppeteerSharp.Cdp.CdpFrame.GoToAsync(String url, NavigationOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpFrame.cs:line 107
+   --- End of inner exception stack trace ---
+   at PuppeteerSharp.Cdp.CdpFrame.GoToAsync(String url, NavigationOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Cdp/CdpFrame.cs:line 111
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.LoadPageWithPuppeteer(String url, String mainContentSelector) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 163
+[2026-02-16 00:53:22.970 Warning] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Page content is empty for URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Liège

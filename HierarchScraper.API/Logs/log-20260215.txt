@@ -1,0 +1,53 @@
+[2026-02-15 22:53:22.399 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-15 22:53:22.460 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-15 22:53:22.462 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-15 22:53:22.465 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-15 22:56:54.219 Information] Microsoft.Hosting.Lifetime: Application is shutting down...
+[2026-02-15 22:57:27.021 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-15 22:57:27.105 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-15 22:57:27.107 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-15 22:57:27.109 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-15 23:00:05.044 Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware: Failed to determine the https port for redirect.
+[2026-02-15 23:01:08.125 Information] Microsoft.Hosting.Lifetime: Application is shutting down...
+[2026-02-15 23:02:16.178 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-15 23:02:16.381 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-15 23:02:16.440 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-15 23:02:16.449 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-15 23:03:25.153 Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware: Failed to determine the https port for redirect.
+[2026-02-15 23:09:29.624 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-15 23:09:29.972 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-15 23:09:30.099 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-15 23:09:30.216 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-15 23:09:30.463 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-15 23:09:30.597 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-15 23:14:41.925 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Indeed Belgium
+[2026-02-15 23:15:23.688 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Launching browser...
+[2026-02-15 23:16:23.748 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Downloading Chrome... Please wait.
+[2026-02-15 23:32:48.622 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Indeed Belgium
+System.ComponentModel.Win32Exception (2): An error occurred trying to start process 'C:\Users\arka\Code\HierarchScraper\HierarchScraper.API\bin\Debug\net8.0\Chrome\Win64-138.0.7204.101\chrome-win64\chrome.exe' with working directory 'C:\Users\arka\Code\HierarchScraper\HierarchScraper.API'. Le fichier spécifié est introuvable.
+   at System.Diagnostics.Process.StartWithCreateProcess(ProcessStartInfo startInfo)
+   at PuppeteerSharp.States.ProcessStartingState.StartCoreAsync(LauncherBase p) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/States/ProcessStartingState.cs:line 66
+   at PuppeteerSharp.Launcher.LaunchAsync(LaunchOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Launcher.cs:line 94
+   at PuppeteerSharp.Launcher.LaunchAsync(LaunchOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Launcher.cs:line 142
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.EnsureBrowserInitialized() in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 115
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 49
+[2026-02-15 23:36:26.808 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Indeed Belgium
+[2026-02-15 23:36:26.826 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Launching browser...
+[2026-02-15 23:37:00.800 Error] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Error scraping source: Indeed Belgium
+System.ComponentModel.Win32Exception (2): An error occurred trying to start process 'C:\Users\arka\Code\HierarchScraper\HierarchScraper.API\bin\Debug\net8.0\Chrome\Win64-138.0.7204.101\chrome-win64\chrome.exe' with working directory 'C:\Users\arka\Code\HierarchScraper\HierarchScraper.API'. Le fichier spécifié est introuvable.
+   at System.Diagnostics.Process.StartWithCreateProcess(ProcessStartInfo startInfo)
+   at PuppeteerSharp.States.ProcessStartingState.StartCoreAsync(LauncherBase p) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/States/ProcessStartingState.cs:line 66
+   at PuppeteerSharp.Launcher.LaunchAsync(LaunchOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Launcher.cs:line 94
+   at PuppeteerSharp.Launcher.LaunchAsync(LaunchOptions options) in /home/runner/work/puppeteer-sharp/puppeteer-sharp/lib/PuppeteerSharp/Launcher.cs:line 142
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.EnsureBrowserInitialized() in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 115
+   at HierarchScraper.Infrastructure.Services.PuppeteerScrapingService.ScrapeSourceAsync(ScrapingSource source) in C:\Users\arka\Code\HierarchScraper\HierarchScraper.Infrastructure\Services\PuppeteerScrapingService.cs:line 49
+[2026-02-15 23:46:17.930 Warning] Microsoft.AspNetCore.Server.Kestrel.Core.KestrelServer: The ASP.NET Core developer certificate is not trusted. For information about trusting the ASP.NET Core developer certificate, see https://aka.ms/aspnet/https-trust-dev-cert.
+[2026-02-15 23:46:18.441 Information] Microsoft.Hosting.Lifetime: Now listening on: https://localhost:7233
+[2026-02-15 23:46:18.465 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-15 23:46:18.676 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-15 23:46:18.694 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-15 23:46:18.833 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-15 23:46:42.409 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Starting scraping for source: Indeed Belgium
+[2026-02-15 23:46:42.592 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Configuration du navigateur...
+[2026-02-15 23:47:54.116 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Lancement du navigateur : C:\Users\arka\AppData\Local\PuppeteerSharp\Chrome\Win64-138.0.7204.101\chrome-win64\chrome.exe
+[2026-02-15 23:48:34.646 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Navigateur lancé avec succès.

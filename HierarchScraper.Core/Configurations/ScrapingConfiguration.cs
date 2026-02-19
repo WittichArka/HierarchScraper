@@ -13,6 +13,8 @@ public class ItemConfiguration
     public List<ExclusionRule> ExclusionRules { get; set; } = new List<ExclusionRule>();
     public string TitleSelector { get; set; } = string.Empty;
     public string DetailSelector { get; set; } = string.Empty;
+    public string JobKeyAttribute { get; set; } = string.Empty;
+    public string DetailUrlTemplate { get; set; } = string.Empty;
 }
 
 public class ExclusionRule
