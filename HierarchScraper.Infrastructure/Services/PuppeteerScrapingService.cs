@@ -265,7 +265,10 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
     {
         var titleEl = item.QuerySelector(config.TitleSelector);
         var keyEl = item.QuerySelector($"[{config.JobKeyAttribute}]");
-        string keyElValue = keyEl.GetAttribute(config.JobKeyAttribute) ?? string.Empty;
+        string keyElValue = 
+            keyEl != null 
+                ? (keyEl.GetAttribute(config.JobKeyAttribute) ?? string.Empty) 
+                : string.Empty;
 
         if (titleEl == null || string.IsNullOrEmpty(keyElValue)) return null;
 
@@ -273,6 +276,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         return new Vacancy
         {
             Name = titleEl.TextContent.Trim(),
+            JobId = keyElValue,
             DetailUrl = url.StartsWith("http") ? url : new Uri(new Uri(source.Url), url).AbsoluteUri,
             SourcePlatform = source.Platform,
             ScrapingSourceId = source.Id,

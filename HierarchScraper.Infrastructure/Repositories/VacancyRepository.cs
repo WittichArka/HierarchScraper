@@ -16,6 +16,11 @@ public class VacancyRepository : IVacancyRepository
 
     public async Task<Vacancy> AddAsync(Vacancy vacancy)
     {
+        //Do not add if it already existing
+        var existingVacancy = await _context.Vacancies.SingleOrDefaultAsync(v => v.SourcePlatform == vacancy.SourcePlatform && v.JobId == vacancy.JobId);
+        if (existingVacancy != null)
+            return existingVacancy;
+
         _context.Vacancies.Add(vacancy);
         await _context.SaveChangesAsync();
         return vacancy;

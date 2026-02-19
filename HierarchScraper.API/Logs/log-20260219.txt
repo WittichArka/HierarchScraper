@@ -13,3 +13,9 @@
 [2026-02-19 14:19:00.502 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Found 16 items on page 3
 [2026-02-19 14:19:06.832 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Loading URL: https://emplois.be.indeed.com/jobs?q=informaticien&l=Li%C3%A8ge&radius=25&start=30 (Attempt 1)
 [2026-02-19 14:19:29.226 Information] HierarchScraper.Infrastructure.Services.PuppeteerScrapingService: Found 4 items on page 4
+[2026-02-19 20:00:33.675 Information] Microsoft.Hosting.Lifetime: Now listening on: http://localhost:5170
+[2026-02-19 20:00:33.739 Information] Microsoft.Hosting.Lifetime: Application started. Press Ctrl+C to shut down.
+[2026-02-19 20:00:33.742 Information] Microsoft.Hosting.Lifetime: Hosting environment: Development
+[2026-02-19 20:00:33.840 Information] Microsoft.Hosting.Lifetime: Content root path: C:\Users\arka\Code\HierarchScraper\HierarchScraper.API
+[2026-02-19 20:01:18.817 Warning] Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware: Failed to determine the https port for redirect.
+[2026-02-19 20:02:33.547 Information] Microsoft.Hosting.Lifetime: Application is shutting down...
