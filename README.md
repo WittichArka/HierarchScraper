@@ -25,6 +25,21 @@ L'application suit une architecture en couches avec :
 - **DetailSelector** : Sélecteur CSS pour extraire l'URL de détail
 - **NextPageSelector** : Sélecteur CSS pour la pagination
 
+#### Extraire et enrichir depuis la page de détail
+Lorsque le listing ne contient pas toutes les informations, vous pouvez indiquer un
+`DetailConfig` complet.
+- **MainSelector** : (optionnel) élément qui doit exister sur la page de détail avant de commencer l'extraction.
+- **FieldSelectors** : dictionnaire `nomChamp -> sélecteur` qui mappe HTML → propriétés du modèle.  - Un sélecteur peut être suivi de `|attribut` (ex. `a.apply|href`) pour lire une
+    valeur d'attribut plutôt que le texte.  - Les champs reconnus (companyName, location, jobDescription, contractType, salary,
+    remotePolicy, applyLink, postedDateRaw, etc.) sont affectés directement.
+  - Les noms inconnus sont stockés sous forme JSON dans `Vacancy.AdditionalDataJson`.
+
+Le service tente de charger chaque détail puis appelle `VacancyDetailParser` pour
+peupler l'objet. Si une offre existante (même `JobId`+`SourcePlatform`) est trouvée,
+les nouveaux champs non vides sont fusionnés dans la ligne existante : cela permet
+d'abord d'enregistrer les annonces légères puis d'ajouter les informations détaillées
+plus tard sans créer de doublons.
+
 ### 3. Règles d'exclusion
 Chaque règle d'exclusion contient :
 - **Selector** : Sélecteur CSS pour chercher la règle
@@ -85,7 +100,19 @@ PuppeteerSharp est utilisé pour le scraping. Vous pouvez configurer ses options
       }
     ],
     "TitleSelector": ".job-title",
-    "DetailSelector": ".job-link"
+    "DetailSelector": ".job-link",
+    "DetailConfig": {
+      "MainSelector": "#job-detail",           // élément attendu avant de lire les champs
+      "FieldSelectors": {
+        "description": "#job-description",
+        "company": ".company-name",
+        "location": ".job-location",
+        "contractType": ".contract-type",
+        "salary": ".salary-range",
+        "postedDate": ".posted-date",
+        "applyLink": ".apply-button a"
+      }
+    }
   }
 }
 ```

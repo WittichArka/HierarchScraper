@@ -14,6 +14,18 @@
       }
     ],
     "TitleSelector": ".job-title",
-    "DetailSelector": ".job-link"
+    "DetailSelector": ".job-link",
+    "DetailConfig": {
+      "MainSelector": "#job-detail",           
+      "FieldSelectors": {
+        "description": "#job-description",
+        "company": ".company-name",
+        "location": ".job-location",
+        "contractType": ".contract-type",
+        "salary": ".salary-range",
+        "postedDate": ".posted-date",
+        "applyLink": ".apply-button a|href"
+      }
+    }
   }
 }

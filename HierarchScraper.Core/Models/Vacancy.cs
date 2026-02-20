@@ -33,4 +33,16 @@ public class Vacancy
     // Nouveau : Un champ JSON pour stocker des infos spécifiques sans changer la DB
     // Utile pour stocker les "Avantages" (Chèques repas, voiture, etc.)
     public string? AdditionalDataJson { get; set; } 
+
+    // Facile à consommer côté API : désérialise automatiquement le JSON
+    [System.ComponentModel.DataAnnotations.Schema.NotMapped]
+    public Dictionary<string,string>? AdditionalData
+    {
+        get => string.IsNullOrEmpty(AdditionalDataJson)
+                ? null
+                : System.Text.Json.JsonSerializer.Deserialize<Dictionary<string,string>>(AdditionalDataJson);
+        set => AdditionalDataJson = value == null
+                ? null
+                : System.Text.Json.JsonSerializer.Serialize(value);
+    }
 }
