@@ -367,6 +367,17 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         foreach (var s in sources) await ScrapeSourceAsync(s);
     }
 
+    /// <inheritdoc />
+    public async Task<Vacancy?> UpdateVacancyDetailAsync(Vacancy vacancy, DetailConfiguration detailConfig)
+    {
+        if (vacancy == null || string.IsNullOrEmpty(vacancy.DetailUrl) || detailConfig == null)
+            return vacancy;
+
+        // reuse existing helper which loads the page and runs the parser
+        await PopulateVacancyDetailAsync(vacancy, detailConfig);
+        return vacancy;
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_browser != null) await _browser.CloseAsync();

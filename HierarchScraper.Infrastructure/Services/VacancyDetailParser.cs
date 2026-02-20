@@ -55,34 +55,44 @@ public static class VacancyDetailParser
             switch (field.ToLowerInvariant())
             {
                 case "companyname":
-                    vacancy.CompanyName = raw;
+                    if (string.IsNullOrEmpty(vacancy.CompanyName))
+                        vacancy.CompanyName = raw;
                     break;
                 case "location":
-                    vacancy.Location = raw;
+                    if (string.IsNullOrEmpty(vacancy.Location))
+                        vacancy.Location = raw;
                     break;
                 case "jobdescription":
                 case "description":
-                    vacancy.JobDescription = raw;
+                    if (string.IsNullOrEmpty(vacancy.JobDescription))
+                        vacancy.JobDescription = raw;
                     break;
                 case "contracttype":
-                    vacancy.ContractType = raw;
+                    if (string.IsNullOrEmpty(vacancy.ContractType))
+                        vacancy.ContractType = raw;
                     break;
                 case "salary":
-                    vacancy.Salary = raw;
+                    if (string.IsNullOrEmpty(vacancy.Salary))
+                        vacancy.Salary = raw;
                     break;
                 case "remotepolicy":
-                    vacancy.RemotePolicy = raw;
+                    if (string.IsNullOrEmpty(vacancy.RemotePolicy))
+                        vacancy.RemotePolicy = raw;
                     break;
                 case "applylink":
                     // if attribute wasn't specified, try href
-                    if (string.IsNullOrEmpty(attr) && element is IHtmlAnchorElement a)
-                        vacancy.ApplyLink = a.Href;
-                    else
-                        vacancy.ApplyLink = raw;
+                    if (string.IsNullOrEmpty(vacancy.ApplyLink))
+                    {
+                        if (string.IsNullOrEmpty(attr) && element is IHtmlAnchorElement a)
+                            vacancy.ApplyLink = a.Href;
+                        else
+                            vacancy.ApplyLink = raw;
+                    }
                     break;
                 case "posteddateraw":
                 case "postdate":
-                    vacancy.PostedDateRaw = raw;
+                    if (string.IsNullOrEmpty(vacancy.PostedDateRaw))
+                        vacancy.PostedDateRaw = raw;
                     break;
                 default:
                     additional[field] = raw;

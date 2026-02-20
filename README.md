@@ -40,6 +40,18 @@ les nouveaux champs non vides sont fusionnés dans la ligne existante : cela pe
 d'abord d'enregistrer les annonces légères puis d'ajouter les informations détaillées
 plus tard sans créer de doublons.
 
+> **Nouvel endpoint**
+> Un appel manuel est également possible via l'API pour mettre à jour une offre déjà
+> enregistrée en se basant sur l'URL de détail qui figure dans la donnée. Cela ne
+> remplace que les valeurs manquantes :
+>
+> ```http
+> POST /api/scraping/vacancy/{id}/update
+> ```
+>
+> Le service récupère la configuration du `ScrapingSource` associé et exécute le
+> même parseur que lors du scraping initial.
+
 ### 3. Règles d'exclusion
 Chaque règle d'exclusion contient :
 - **Selector** : Sélecteur CSS pour chercher la règle
