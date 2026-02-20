@@ -5,6 +5,7 @@ using AngleSharp.Dom;
 using HierarchScraper.Core.Configurations;
 using HierarchScraper.Core.Interfaces;
 using HierarchScraper.Core.Models;
+using HierarchScraper.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
@@ -87,8 +88,11 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 {
                     Console.WriteLine(item.InnerHtml);
                     if (ShouldExcludeItem(item, config.ItemConfig.ExclusionRules)) continue;
-                    var vacancy = ExtractVacancyFromItem(item, config.ItemConfig, source);
-                    if (vacancy != null) vacancies.Add(vacancy);
+                    var vacancy = await ExtractVacancyFromItem(item, config.ItemConfig, source);
+                    if (vacancy != null)
+                    {
+                        vacancies.Add(vacancy);
+                    }
                 }
 
                 currentUrl = await GetNextPageUrlWithPuppeteer(page, config.NextPageSelector);
@@ -261,27 +265,100 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         return rules.Any(r => (item.QuerySelectorAll(r.Selector).Length > 0 && r.MustExist) || (item.QuerySelectorAll(r.Selector).Length == 0 && !r.MustExist));
     }
 
-    private Vacancy? ExtractVacancyFromItem(IElement item, ItemConfiguration config, ScrapingSource source)
+    private async Task PopulateVacancyDetailAsync(Vacancy vacancy, DetailConfiguration detailConfig)
+    {
+        if (vacancy == null || string.IsNullOrEmpty(vacancy.DetailUrl) || detailConfig == null)
+            return;
+
+        var page = await LoadPageWithPuppeteer(vacancy.DetailUrl, detailConfig.MainSelector);
+        if (page == null) return;
+
+        var html = await page.GetContentAsync();
+        if (string.IsNullOrEmpty(html))
+        {
+            await page.CloseAsync();
+            return;
+        }
+
+        var context = BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader());
+        var document = await context.OpenAsync(req => req.Content(html));
+
+        VacancyDetailParser.PopulateFromDocument(vacancy, document, detailConfig);
+
+        await page.CloseAsync();
+    }
+
+    private async Task<Vacancy?> ExtractVacancyFromItem(IElement item, ItemConfiguration config, ScrapingSource source)
     {
         var titleEl = item.QuerySelector(config.TitleSelector);
-        var keyEl = item.QuerySelector($"[{config.JobKeyAttribute}]");
-        string keyElValue = 
-            keyEl != null 
-                ? (keyEl.GetAttribute(config.JobKeyAttribute) ?? string.Empty) 
-                : string.Empty;
+        if (titleEl == null) return null;
 
-        if (titleEl == null || string.IsNullOrEmpty(keyElValue)) return null;
+        string jobId = string.Empty;
+        string detailUrl = string.Empty;
 
-        var url = string.Format(config.DetailUrlTemplate, keyElValue);
-        return new Vacancy
+        // if a link selector is provided, try to read from it first
+        if (!string.IsNullOrEmpty(config.DetailSelector))
+        {
+            var linkEl = item.QuerySelector(config.DetailSelector);
+            if (linkEl != null)
+            {
+                // use href when available (anchor element)
+                if (linkEl is AngleSharp.Html.Dom.IHtmlAnchorElement anchor && !string.IsNullOrEmpty(anchor.Href))
+                {
+                    detailUrl = anchor.Href;
+                }
+                else if (!string.IsNullOrEmpty(config.JobKeyAttribute))
+                {
+                    jobId = linkEl.GetAttribute(config.JobKeyAttribute) ?? string.Empty;
+                }
+            }
+        }
+
+        // fallback: search for any element bearing the job key attribute
+        if (string.IsNullOrEmpty(jobId) && !string.IsNullOrEmpty(config.JobKeyAttribute))
+        {
+            var keyEl = item.QuerySelector($"[{config.JobKeyAttribute}]");
+            if (keyEl != null)
+            {
+                jobId = keyEl.GetAttribute(config.JobKeyAttribute) ?? string.Empty;
+            }
+        }
+
+        // build URL from template if necessary
+        if (string.IsNullOrEmpty(detailUrl) && !string.IsNullOrEmpty(config.DetailUrlTemplate) && !string.IsNullOrEmpty(jobId))
+        {
+            detailUrl = string.Format(config.DetailUrlTemplate, jobId);
+        }
+
+        if (string.IsNullOrEmpty(jobId) && string.IsNullOrEmpty(detailUrl))
+            return null;
+
+        if (string.IsNullOrEmpty(jobId) && !string.IsNullOrEmpty(detailUrl))
+        {
+            jobId = detailUrl; // fallback: use URL as identifier
+        }
+
+        if (!string.IsNullOrEmpty(detailUrl) && !detailUrl.StartsWith("http"))
+        {
+            detailUrl = new Uri(new Uri(source.Url), detailUrl).AbsoluteUri;
+        }
+
+        var vacancy = new Vacancy
         {
             Name = titleEl.TextContent.Trim(),
-            JobId = keyElValue,
-            DetailUrl = url.StartsWith("http") ? url : new Uri(new Uri(source.Url), url).AbsoluteUri,
+            JobId = jobId,
+            DetailUrl = detailUrl,
             SourcePlatform = source.Platform,
             ScrapingSourceId = source.Id,
             CreatedDate = DateTime.UtcNow
         };
+
+        if (config.DetailConfig?.FieldSelectors?.Any() == true)
+        {
+            await PopulateVacancyDetailAsync(vacancy, config.DetailConfig);
+        }
+
+        return vacancy;
     }
 
     public async Task ProcessAllActiveSourcesAsync()
