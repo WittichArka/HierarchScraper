@@ -28,6 +28,11 @@ public static class VacancyDetailParser
             if (string.IsNullOrEmpty(field) || string.IsNullOrEmpty(selector))
                 continue;
 
+            bool isEvaluatingIsActiveWithFieldKeySelector = false;
+            var isActiveContentFieldKey = "description";
+            if (field == isActiveContentFieldKey)
+                isEvaluatingIsActiveWithFieldKeySelector = true;
+
             // allow the config to specify an attribute after a pipe (e.g. "a.apply|href")
             string? attr = null;
             if (selector.Contains("|"))
@@ -38,7 +43,12 @@ public static class VacancyDetailParser
             }
 
             var element = document.QuerySelector(selector);
-            if (element == null) continue;
+            if (element == null) 
+            {
+                if (isEvaluatingIsActiveWithFieldKeySelector)
+                    vacancy.IsActive = false;
+                continue;
+            }
 
             string? raw;
             if (!string.IsNullOrEmpty(attr))
@@ -50,34 +60,33 @@ public static class VacancyDetailParser
                 raw = element.TextContent?.Trim();
             }
 
-            if (string.IsNullOrEmpty(raw)) continue;
+            if (string.IsNullOrEmpty(raw))
+            {
+                if (isEvaluatingIsActiveWithFieldKeySelector)
+                    vacancy.IsActive = false;
+                continue;
+            }
 
             switch (field.ToLowerInvariant())
             {
                 case "companyname":
-                    if (string.IsNullOrEmpty(vacancy.CompanyName))
-                        vacancy.CompanyName = raw;
+                    vacancy.CompanyName = raw;
                     break;
                 case "location":
-                    if (string.IsNullOrEmpty(vacancy.Location))
-                        vacancy.Location = raw;
+                    vacancy.Location = raw;
                     break;
                 case "jobdescription":
                 case "description":
-                    if (string.IsNullOrEmpty(vacancy.JobDescription))
-                        vacancy.JobDescription = raw;
+                    vacancy.JobDescription = raw;
                     break;
                 case "contracttype":
-                    if (string.IsNullOrEmpty(vacancy.ContractType))
-                        vacancy.ContractType = raw;
+                    vacancy.ContractType = raw;
                     break;
                 case "salary":
-                    if (string.IsNullOrEmpty(vacancy.Salary))
-                        vacancy.Salary = raw;
+                    vacancy.Salary = raw;
                     break;
                 case "remotepolicy":
-                    if (string.IsNullOrEmpty(vacancy.RemotePolicy))
-                        vacancy.RemotePolicy = raw;
+                    vacancy.RemotePolicy = raw;
                     break;
                 case "applylink":
                     // if attribute wasn't specified, try href
@@ -91,8 +100,7 @@ public static class VacancyDetailParser
                     break;
                 case "posteddateraw":
                 case "postdate":
-                    if (string.IsNullOrEmpty(vacancy.PostedDateRaw))
-                        vacancy.PostedDateRaw = raw;
+                    vacancy.PostedDateRaw = raw;
                     break;
                 default:
                     additional[field] = raw;

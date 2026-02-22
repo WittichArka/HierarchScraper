@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using HierarchScraper.Core.Configurations;
+using HierarchScraper.Core.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -103,43 +104,21 @@ try
     // new endpoint: update vacancy details by id using stored DetailUrl
     app.MapPost("/api/scraping/vacancy/{id}/update", async (
         int id,
-        HierarchScraper.Core.Interfaces.IVacancyRepository vacancyRepo,
-        HierarchScraper.Core.Interfaces.IScrapingService scrapingService,
-        HierarchScraper.Core.Interfaces.IScrapingSourceRepository sourceRepo) =>
+        HierarchScraper.Core.Interfaces.IScrapingService scrapingService) =>
     {
-        var vacancy = await vacancyRepo.GetByIdAsync(id);
-        if (vacancy == null)
-            return Results.NotFound();
-
-        if (string.IsNullOrEmpty(vacancy.DetailUrl))
-            return Results.BadRequest(new { error = "Vacancy does not have a detail URL" });
-
-        var source = await sourceRepo.GetByIdAsync(vacancy.ScrapingSourceId);
-        if (source == null)
-            return Results.BadRequest(new { error = "Associated scraping source not found" });
-
-        DetailConfiguration? detailConfig = null;
         try
         {
-            if (!string.IsNullOrEmpty(source.ScrapingConfig))
-            {
-                var config = System.Text.Json.JsonSerializer.Deserialize<HierarchScraper.Core.Configurations.ScrapingConfiguration>(source.ScrapingConfig);
-                detailConfig = config?.ItemConfig?.DetailConfig;
-            }
+            var result = await scrapingService.UpdateVacancyDetailAsync(id);
+
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
+                return Results.BadRequest( new { error = result.ErrorMessage });
+
+            return Results.Ok(result.Data);
         }
-        catch (Exception ex)
+        catch(Exception ex)
         {
-            // ignore parsing issues; detailConfig will remain null
-            Console.WriteLine("Failed to parse scraping config: " + ex.Message);
+            return Results.Problem(ex.Message);
         }
-
-        if (detailConfig == null || detailConfig.FieldSelectors == null || !detailConfig.FieldSelectors.Any())
-            return Results.BadRequest(new { error = "No detail configuration available for this source" });
-
-        await scrapingService.UpdateVacancyDetailAsync(vacancy, detailConfig);
-        await vacancyRepo.UpdateAsync(vacancy);
-
-        return Results.Ok(vacancy);
     })
     .WithName("UpdateVacancyDetail")
     .WithOpenApi();

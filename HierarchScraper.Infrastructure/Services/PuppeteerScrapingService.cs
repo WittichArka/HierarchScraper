@@ -9,6 +9,7 @@ using HierarchScraper.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
+using HierarchScraper.Core.DTOs;
 
 namespace HierarchScraper.Infrastructure.Services;
 
@@ -377,14 +378,42 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
     }
 
     /// <inheritdoc />
-    public async Task<Vacancy?> UpdateVacancyDetailAsync(Vacancy vacancy, DetailConfiguration detailConfig)
+    public async Task<ScrapingUpdateVacancyDetailResult> UpdateVacancyDetailAsync(int vacancyId)
     {
-        if (vacancy == null || string.IsNullOrEmpty(vacancy.DetailUrl) || detailConfig == null)
-            return vacancy;
+        var vacancy = await _vacancyRepository.GetByIdAsync(vacancyId);
+        if (vacancy == null)
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = $"Vacancy #{vacancyId} has not been found" };
+
+        if (string.IsNullOrEmpty(vacancy.DetailUrl))
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = "Vacancy does not have a detail URL" };
+
+        var source = await _sourceRepository.GetByIdAsync(vacancy.ScrapingSourceId);
+        if (source == null)
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = "Associated scraping source not found" };
+
+        DetailConfiguration? detailConfig = null;
+        try
+        {
+            if (!string.IsNullOrEmpty(source.ScrapingConfig))
+            {
+                var config = System.Text.Json.JsonSerializer.Deserialize<HierarchScraper.Core.Configurations.ScrapingConfiguration>(source.ScrapingConfig);
+                detailConfig = config?.ItemConfig?.DetailConfig;
+            }
+        }
+        catch (Exception ex)
+        {
+            // ignore parsing issues; detailConfig will remain null
+            Console.WriteLine("Failed to parse scraping config: " + ex.Message);
+        }
+
+        if (detailConfig == null || detailConfig.FieldSelectors == null || !detailConfig.FieldSelectors.Any())
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = "No detail configuration available for this source" };
 
         // reuse existing helper which loads the page and runs the parser
         await PopulateVacancyDetailAsync(vacancy, detailConfig);
-        return vacancy;
+        await _vacancyRepository.UpdateAsync(vacancy);
+
+        return new ScrapingUpdateVacancyDetailResult { Data = vacancy };
     }
 
     public async ValueTask DisposeAsync()

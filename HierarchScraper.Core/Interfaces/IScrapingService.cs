@@ -1,5 +1,6 @@
 using HierarchScraper.Core.Configurations;
 using HierarchScraper.Core.Models;
+using HierarchScraper.Core.DTOs;
 
 namespace HierarchScraper.Core.Interfaces;
 
@@ -14,5 +15,5 @@ public interface IScrapingService
     /// vacancy argument is modified in-place and returned (or <c>null</c> if
     /// the request failed).
     /// </summary>
-    Task<Vacancy?> UpdateVacancyDetailAsync(Vacancy vacancy, DetailConfiguration detailConfig);
+    Task<ScrapingUpdateVacancyDetailResult> UpdateVacancyDetailAsync(int vacancyId);
 }
