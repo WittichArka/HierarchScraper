@@ -45,7 +45,6 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         try
         {
             _logger.LogInformation("Starting scraping for source: {SourceName}", source.Name);
-            await EnsureBrowserInitialized();
 
             var config = JsonSerializer.Deserialize<ScrapingConfiguration>(source.ScrapingConfig);
             if (config == null) return Enumerable.Empty<Vacancy>();
@@ -128,6 +127,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         {
             if (_browser != null && !_browser.IsClosed) return;
 
+            _logger.LogInformation("Initializing browser...");
             var browserPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PuppeteerSharp");
             var browserFetcher = new BrowserFetcher(new BrowserFetcherOptions { Path = browserPath });
             
@@ -157,6 +157,8 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 },
                 Timeout = _puppeteerOptions.Timeout
             });
+
+            _logger.LogInformation("Browser initialized!");
         }
         finally
         {
@@ -166,6 +168,13 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
 
     private async Task<IPage?> LoadPageWithPuppeteer(string url, string mainContentSelector)
     {
+        try{
+            await EnsureBrowserInitialized();
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError("Error initializing browser : {0}", ex.Message);
+        }
         if (_browser == null) return null;
         IPage? page = null;
         int retryCount = 0;
