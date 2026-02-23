@@ -67,6 +67,11 @@ public class DetailConfiguration
     /// <see cref="Models.Vacancy.AdditionalDataJson" />.
     /// </summary>
     public Dictionary<string,string> FieldSelectors { get; set; } = new Dictionary<string,string>();
+
+    /// <summary>
+    /// Contains logic on how to detect to detect wether or not a vacancy is active or not
+    /// </summary> 
+    public IsActiveConfiguration IsActiveConfig { get; set; } = new IsActiveConfiguration();
 }
 
 /// <summary>
@@ -80,4 +85,11 @@ public class ExclusionRule
 
     /// <summary>If true, the item is excluded when the selector matches.</summary>
     public bool MustExist { get; set; } = true;
+}
+
+public class IsActiveConfiguration
+{
+    public List<string> BySentences { get; set; } = new List<string>();
+
+    public bool IsNoDescriptionInactive { get; set; } = false;
 }

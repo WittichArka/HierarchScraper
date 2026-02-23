@@ -16,13 +16,22 @@
             "salary": "[data-testid='jobsearch-JobDescriptionSection-sectionItem']",
             "postedDate": ".jobsearch-JobMetadataFooter > div:first-child",
             "applyLink": "button[aria-label='Postuler maintenant']"
-            }
+            },
+		"IsActiveConfig": {
+				"BySentences" : [
+					"Cette offre a expiré",
+        			"n'accepte pas les candidatures",
+        			"Offre clôturée",
+        			"ne recrute pas actuellement"
+				],
+				"IsNoDescriptionInactive": true
+			}
 	    },
 		"DetailUrlTemplate": "https://emplois.be.indeed.com/viewjob?jk={0}"
 	}
 }
 
-OLD CONFIG :
+//OLD CONFIG :
 {
 	"ListSelector": "#mosaic-provider-jobcards",
 	"NextPageSelector": "a[data-testid='pagination-page-next']",

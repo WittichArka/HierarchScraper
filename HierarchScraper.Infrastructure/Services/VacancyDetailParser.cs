@@ -45,7 +45,8 @@ public static class VacancyDetailParser
             var element = document.QuerySelector(selector);
             if (element == null) 
             {
-                if (isEvaluatingIsActiveWithFieldKeySelector)
+                if (isEvaluatingIsActiveWithFieldKeySelector && 
+                    config.IsActiveConfig.IsNoDescriptionInactive)
                     vacancy.IsActive = false;
                 continue;
             }

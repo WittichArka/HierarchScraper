@@ -161,6 +161,10 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
 
             _logger.LogInformation("Browser initialized!");
         }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex.Message);
+        }
         finally
         {
             _browserSemaphore.Release();
@@ -294,6 +298,15 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         var document = await context.OpenAsync(req => req.Content(html));
 
         VacancyDetailParser.PopulateFromDocument(vacancy, document, detailConfig);
+
+        if (detailConfig?.IsActiveConfig?.BySentences?.Any() ?? false)
+        {
+            string sentences = string.Join("`,`", detailConfig.IsActiveConfig.BySentences);
+            string jsFunction = $@"() => {{const messages = [`{sentences}`];const pageText = document.body.innerText;return messages.some(msg => pageText.includes(msg));}}";
+            bool isExpired = await page.EvaluateFunctionAsync<bool>(jsFunction);
+            vacancy.IsActive = !isExpired;
+        }
+
 
         await page.CloseAsync();
     }
