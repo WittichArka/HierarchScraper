@@ -71,6 +71,7 @@ public static class VacancyDetailParser
             switch (field.ToLowerInvariant())
             {
                 case "companyname":
+                case "company":
                     vacancy.CompanyName = raw;
                     break;
                 case "location":
