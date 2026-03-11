@@ -62,6 +62,11 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 pageCount++;
 
                 var page = await LoadPageWithPuppeteer(currentUrl, config.ListSelector); 
+                if (page == null)
+                {
+                    _logger.LogError("Failed to load page for URL: {Url}", currentUrl);
+                    break;
+                }
 
                 var pageHtml = await page.GetContentAsync();                
                 if (string.IsNullOrEmpty(pageHtml)) 
@@ -78,6 +83,12 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 if (listElement == null)
                 {
                     _logger.LogWarning("Selector {Selector} not found on page", config.ListSelector);
+                    break;
+                }
+
+                if (config.ItemConfig == null)
+                {
+                    _logger.LogError("ItemConfig is null for source: {SourceName}", source.Name);
                     break;
                 }
 
@@ -114,9 +125,9 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
     private async Task SaveToFile(string someText)
     {
         var dt = DateTime.Now;
-        using (var fs = new FileStream($".\\{dt.ToFileTime()}.html", FileMode.CreateNew))
+        using (var fs = new FileStream($"{dt.ToFileTime()}.html", FileMode.CreateNew))
         using (var sw = new StreamWriter(fs))
-            sw.WriteLine(someText);
+            await sw.WriteLineAsync(someText);
     }
 
     private async Task EnsureBrowserInitialized()
@@ -141,7 +152,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
 
             var executablePath = installedBrowsers.First().GetExecutablePath();
 
-            string userDataDir = _puppeteerOptions.UserDataSavePath;
+            string userDataDir = ResolvePath(_puppeteerOptions.UserDataSavePath);
             _browser = await Puppeteer.LaunchAsync(new LaunchOptions
             {
                 Headless = _puppeteerOptions.Headless,
@@ -162,6 +173,31 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         {
             _browserSemaphore.Release();
         }
+    }
+
+    private string ResolvePath(string path)
+    {
+        if (string.IsNullOrEmpty(path)) return path;
+
+        // Resolve %VAR% (Windows style)
+        path = Environment.ExpandEnvironmentVariables(path);
+
+        // Resolve $VAR or ${VAR} (Unix style)
+        if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+        {
+            var matches = System.Text.RegularExpressions.Regex.Matches(path, @"\$([a-zA-Z0-9_]+)|\$\{([a-zA-Z0-9_]+)\}");
+            foreach (System.Text.RegularExpressions.Match match in matches)
+            {
+                var varName = !string.IsNullOrEmpty(match.Groups[1].Value) ? match.Groups[1].Value : match.Groups[2].Value;
+                var varValue = Environment.GetEnvironmentVariable(varName);
+                if (varValue != null)
+                {
+                    path = path.Replace(match.Value, varValue);
+                }
+            }
+        }
+
+        return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
     }
 
     private async Task<IPage?> LoadPageWithPuppeteer(string url, string mainContentSelector)
@@ -253,7 +289,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         }
         catch (Exception ex)
         {
-            // Optionnel : logger l'erreur ex pour le debug
+            _logger.LogError(ex, "Error getting next page URL with selector: {Selector}", nextPageSelector);
             return null;
         }
         // Note : On ne ferme PAS la page ici, car le scraper en aura besoin pour la suite.

@@ -38,7 +38,8 @@ try
     builder.Logging.AddConsole();
     builder.Logging.AddDebug();
     // Add custom file logger
-    builder.Logging.AddProvider(new FileLoggerProvider("Logs/log-"));
+    string logPath = builder.Configuration["Logging:FilePath"] ?? "Logs/log-";
+    builder.Logging.AddProvider(new FileLoggerProvider(ResolvePath(logPath)));
     
     builder.Logging.AddFilter("Microsoft", LogLevel.Warning); 
     // On ajoute cette ligne pour forcer l'affichage du démarrage :
@@ -66,16 +67,14 @@ try
     {
         return await sourceRepo.GetAllAsync();
     })
-    .WithName("GetScrapingSources")
-    .WithOpenApi();
+    .WithName("GetScrapingSources");
 
     app.MapPost("/api/scraping/sources", async (HierarchScraper.Core.Models.ScrapingSource source, HierarchScraper.Core.Interfaces.IScrapingSourceRepository sourceRepo) =>
     {
         var createdSource = await sourceRepo.AddAsync(source);
         return Results.Created($"/api/scraping/sources/{createdSource.Id}", createdSource);
     })
-    .WithName("CreateScrapingSource")
-    .WithOpenApi();
+    .WithName("CreateScrapingSource");
 
     app.MapPost("/api/scraping/sources/{id}/scrape", async (int id, HierarchScraper.Core.Interfaces.IScrapingService scrapingService, HierarchScraper.Core.Interfaces.IScrapingSourceRepository sourceRepo) =>
     {
@@ -88,38 +87,60 @@ try
         var vacancies = await scrapingService.ScrapeSourceAsync(source);
         return Results.Ok(vacancies);
     })
-    .WithName("ScrapeSource")
-    .WithOpenApi();
+    .WithName("ScrapeSource");
 
     app.MapPost("/api/scraping/scrape-all", async (HierarchScraper.Core.Interfaces.IScrapingService scrapingService) =>
     {
         await scrapingService.ProcessAllActiveSourcesAsync();
         return Results.Ok(new { message = "Scraping started for all active sources" });
     })
-    .WithName("ScrapeAllSources")
-    .WithOpenApi();
+    .WithName("ScrapeAllSources");
 
     // Vacancies API endpoints
     app.MapGet("/api/vacancies", async (HierarchScraper.Core.Interfaces.IVacancyRepository vacancyRepo) =>
     {
         return await vacancyRepo.GetAllAsync();
     })
-    .WithName("GetAllVacancies")
-    .WithOpenApi();
+    .WithName("GetAllVacancies");
 
     app.MapGet("/api/vacancies/{id}", async (int id, HierarchScraper.Core.Interfaces.IVacancyRepository vacancyRepo) =>
     {
         var vacancy = await vacancyRepo.GetByIdAsync(id);
         return vacancy == null ? Results.NotFound() : Results.Ok(vacancy);
     })
-    .WithName("GetVacancyById")
-    .WithOpenApi();
+    .WithName("GetVacancyById");
 
     app.Run();
 }
 catch (Exception ex)
 {
     Console.WriteLine("Application terminated unexpectedly: " + ex);
+}
+
+// Helper to resolve cross-platform paths
+static string ResolvePath(string path)
+{
+    if (string.IsNullOrEmpty(path)) return path;
+
+    // Resolve %VAR% (Windows style)
+    path = Environment.ExpandEnvironmentVariables(path);
+
+    // Resolve $VAR or ${VAR} (Unix style)
+    if (OperatingSystem.IsLinux() || OperatingSystem.IsMacOS())
+    {
+        var matches = System.Text.RegularExpressions.Regex.Matches(path, @"\$([a-zA-Z0-9_]+)|\$\{([a-zA-Z0-9_]+)\}");
+        foreach (System.Text.RegularExpressions.Match match in matches)
+        {
+            var varName = !string.IsNullOrEmpty(match.Groups[1].Value) ? match.Groups[1].Value : match.Groups[2].Value;
+            var varValue = Environment.GetEnvironmentVariable(varName);
+            if (varValue != null)
+            {
+                path = path.Replace(match.Value, varValue);
+            }
+        }
+    }
+
+    return path.Replace('\\', Path.DirectorySeparatorChar).Replace('/', Path.DirectorySeparatorChar);
 }
 
 // Custom File Logger Provider
@@ -137,7 +158,7 @@ public class FileLoggerProvider : ILoggerProvider
     
     private void EnsureLogsDirectoryExists()
     {
-        string logsDir = Path.GetDirectoryName(_filePrefix);
+        string? logsDir = Path.GetDirectoryName(_filePrefix);
         if (!string.IsNullOrEmpty(logsDir) && !Directory.Exists(logsDir))
         {
             Directory.CreateDirectory(logsDir);
@@ -167,11 +188,11 @@ public class FileLogger : ILogger
         _getFileCounter = getFileCounter;
     }
     
-    public IDisposable BeginScope<TState>(TState state) => null;
+    public IDisposable? BeginScope<TState>(TState state) where TState : notnull => null;
     
     public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
     
-    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+    public void Log<TState>(LogLevel logLevel, EventId eventId, TState state, Exception? exception, Func<TState, Exception?, string> formatter)
     {
         if (!IsEnabled(logLevel))
             return;
