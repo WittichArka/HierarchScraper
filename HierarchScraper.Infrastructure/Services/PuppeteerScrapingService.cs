@@ -152,18 +152,28 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
             if (_browser != null && !_browser.IsClosed) return;
 
             _logger.LogInformation("Initializing browser...");
-            var browserPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PuppeteerSharp");
-            var browserFetcher = new BrowserFetcher(new BrowserFetcherOptions { Path = browserPath });
-            
-            var installedBrowsers = browserFetcher.GetInstalledBrowsers();
-            if (!installedBrowsers.Any())
-            {
-                _logger.LogInformation("Downloading browser...");
-                await browserFetcher.DownloadAsync();
-                installedBrowsers = browserFetcher.GetInstalledBrowsers();
-            }
+            string executablePath = _puppeteerOptions.ExecutablePath;
 
-            var executablePath = installedBrowsers.First().GetExecutablePath();
+            if (string.IsNullOrEmpty(executablePath))
+            {
+                var browserPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PuppeteerSharp");
+                var browserFetcher = new BrowserFetcher(new BrowserFetcherOptions { Path = browserPath });
+                
+                var installedBrowsers = browserFetcher.GetInstalledBrowsers();
+                if (!installedBrowsers.Any())
+                {
+                    _logger.LogInformation("Downloading browser...");
+                    await browserFetcher.DownloadAsync();
+                    installedBrowsers = browserFetcher.GetInstalledBrowsers();
+                }
+
+                executablePath = installedBrowsers.First().GetExecutablePath();
+            }
+            else
+            {
+                executablePath = ResolvePath(executablePath);
+                _logger.LogInformation("Using configured executable path: {Path}", executablePath);
+            }
 
             string userDataDir = ResolvePath(_puppeteerOptions.UserDataSavePath);
             _browser = await Puppeteer.LaunchAsync(new LaunchOptions
@@ -247,9 +257,10 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 await page.EvaluateFunctionOnNewDocumentAsync("() => { Object.defineProperty(navigator, 'webdriver', { get: () => undefined }); }");
 
                 _logger.LogInformation("Loading URL: {Url} (Attempt {Attempt})", url, retryCount + 1);
+                int navigationTimeout = Math.Max(_puppeteerOptions.Timeout, _puppeteerOptions.WaitForSelectorTimeout);
                 await page.GoToAsync(url, new NavigationOptions {
                     WaitUntil = new[] { WaitUntilNavigation.Networkidle2 },
-                    Timeout = _puppeteerOptions.Timeout
+                    Timeout = navigationTimeout
                 });
 
                 // Délai aléatoire entre 2 et 5 secondes
@@ -338,7 +349,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         if (vacancy == null || string.IsNullOrEmpty(vacancy.DetailUrl) || detailConfig == null)
             return;
 
-        IPage page = null;
+        IPage? page = null;
         try
         {
             page = await LoadPageWithPuppeteer(vacancy.DetailUrl, detailConfig.MainSelector);
