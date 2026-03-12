@@ -14,6 +14,15 @@ public class VacancyRepository : IVacancyRepository
         _context = context;
     }
 
+    public async Task<IEnumerable<string>> GetJobIdsByPlatform(string platform)
+    {
+        return await _context
+        .Vacancies
+        .Where(v => v.SourcePlatform == platform)
+        .Select(v => v.JobId)
+        .ToListAsync();
+    }
+
     public async Task<Vacancy> AddAsync(Vacancy vacancy)
     {
         // Do not duplicate; if an entry already exists we may still merge new details

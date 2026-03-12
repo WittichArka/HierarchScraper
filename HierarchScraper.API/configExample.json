@@ -1,0 +1,45 @@
+{"ListSelector": "#mosaic-provider-jobcards",
+ "NextPageSelector": "a[data-testid='pagination-page-next']",
+ "ItemConfig": {
+	"ItemSelector": ".job_seen_beacon",
+	"ExclusionRules": [{"Selector": ".sponsored", "MustExist": true}],
+	"TitleSelector": "h2.jobTitle span[title]",
+	"JobKeyAttribute": "data-jk",
+   	"DetailSelector": ".job-link",
+   	"DetailConfig": {
+     	"MainSelector": "#jobDescriptionText",           
+     	"FieldSelectors": {
+            "description": "#jobDescriptionText",
+            "company": "[data-testid='inlineHeader-companyName']",
+            "location": "[data-testid='inlineHeader-companyLocation']",
+            "contractType": "#salaryInfoAndJobType",
+            "salary": "[data-testid='jobsearch-JobDescriptionSection-sectionItem']",
+            "postedDate": ".jobsearch-JobMetadataFooter > div:first-child",
+            "applyLink": "button[aria-label='Postuler maintenant']"
+            },
+		"IsActiveConfig": {
+				"BySentences" : [
+					"Cette offre a expiré",
+        			"n'accepte pas les candidatures",
+        			"Offre clôturée",
+        			"ne recrute pas actuellement"
+				],
+				"IsNoDescriptionInactive": true
+			}
+	    },
+		"DetailUrlTemplate": "https://emplois.be.indeed.com/viewjob?jk={0}"
+	}
+}
+
+//OLD CONFIG :
+{
+	"ListSelector": "#mosaic-provider-jobcards",
+	"NextPageSelector": "a[data-testid='pagination-page-next']",
+	"ItemConfig": {
+		"ItemSelector": ".job_seen_beacon",
+		"ExclusionRules": [{"Selector": ".sponsored", "MustExist": true}],
+		"TitleSelector": "h2.jobTitle span[title]",
+		"JobKeyAttribute": "data-jk",
+		"DetailUrlTemplate": "https://emplois.be.indeed.com/viewjob?jk={0}"
+	}
+}

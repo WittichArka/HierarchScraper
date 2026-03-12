@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using HierarchScraper.Core.Configurations;
+using HierarchScraper.Core.DTOs;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,6 +97,27 @@ try
         return Results.Ok(new { message = "Scraping started for all active sources" });
     })
     .WithName("ScrapeAllSources");
+
+    // new endpoint: update vacancy details by id using stored DetailUrl
+    app.MapPost("/api/scraping/vacancy/{id}/update", async (
+        int id,
+        HierarchScraper.Core.Interfaces.IScrapingService scrapingService) =>
+    {
+        try
+        {
+            var result = await scrapingService.UpdateVacancyDetailAsync(id);
+
+            if (!string.IsNullOrEmpty(result.ErrorMessage))
+                return Results.BadRequest( new { error = result.ErrorMessage });
+
+            return Results.Ok(result.Data);
+        }
+        catch(Exception ex)
+        {
+            return Results.Problem(ex.Message);
+        }
+    })
+    .WithName("UpdateVacancyDetail");
 
     // Vacancies API endpoints
     app.MapGet("/api/vacancies", async (HierarchScraper.Core.Interfaces.IVacancyRepository vacancyRepo) =>

@@ -88,3 +88,7 @@ TestResults/
 
 # Coverage results
 coverage/
+/HierarchScraper.API/*.db-wal
+/HierarchScraper.API/*.db-shm
+/indeed_job_page.html
+indeed_job_page_files

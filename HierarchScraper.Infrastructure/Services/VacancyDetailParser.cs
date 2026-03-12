@@ -28,6 +28,11 @@ public static class VacancyDetailParser
             if (string.IsNullOrEmpty(field) || string.IsNullOrEmpty(selector))
                 continue;
 
+            bool isEvaluatingIsActiveWithFieldKeySelector = false;
+            var isActiveContentFieldKey = "description";
+            if (field == isActiveContentFieldKey)
+                isEvaluatingIsActiveWithFieldKeySelector = true;
+
             // allow the config to specify an attribute after a pipe (e.g. "a.apply|href")
             string? attr = null;
             if (selector.Contains("|"))
@@ -38,7 +43,13 @@ public static class VacancyDetailParser
             }
 
             var element = document.QuerySelector(selector);
-            if (element == null) continue;
+            if (element == null) 
+            {
+                if (isEvaluatingIsActiveWithFieldKeySelector && 
+                    config.IsActiveConfig.IsNoDescriptionInactive)
+                    vacancy.IsActive = false;
+                continue;
+            }
 
             string? raw;
             if (!string.IsNullOrEmpty(attr))
@@ -50,11 +61,17 @@ public static class VacancyDetailParser
                 raw = element.TextContent?.Trim();
             }
 
-            if (string.IsNullOrEmpty(raw)) continue;
+            if (string.IsNullOrEmpty(raw))
+            {
+                if (isEvaluatingIsActiveWithFieldKeySelector)
+                    vacancy.IsActive = false;
+                continue;
+            }
 
             switch (field.ToLowerInvariant())
             {
                 case "companyname":
+                case "company":
                     vacancy.CompanyName = raw;
                     break;
                 case "location":
@@ -75,10 +92,13 @@ public static class VacancyDetailParser
                     break;
                 case "applylink":
                     // if attribute wasn't specified, try href
-                    if (string.IsNullOrEmpty(attr) && element is IHtmlAnchorElement a)
-                        vacancy.ApplyLink = a.Href;
-                    else
-                        vacancy.ApplyLink = raw;
+                    if (string.IsNullOrEmpty(vacancy.ApplyLink))
+                    {
+                        if (string.IsNullOrEmpty(attr) && element is IHtmlAnchorElement a)
+                            vacancy.ApplyLink = a.Href;
+                        else
+                            vacancy.ApplyLink = raw;
+                    }
                     break;
                 case "posteddateraw":
                 case "postdate":

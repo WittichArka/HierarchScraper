@@ -9,6 +9,7 @@ using HierarchScraper.Infrastructure.Services;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using PuppeteerSharp;
+using HierarchScraper.Core.DTOs;
 
 namespace HierarchScraper.Infrastructure.Services;
 
@@ -41,17 +42,17 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
             _logger.LogInformation("Source {SourceName} is not active, skipping", source.Name);
             return Enumerable.Empty<Vacancy>();
         }
-
+        var currentUrl = source.Url;
         try
         {
             _logger.LogInformation("Starting scraping for source: {SourceName}", source.Name);
-            await EnsureBrowserInitialized();
 
             var config = JsonSerializer.Deserialize<ScrapingConfiguration>(source.ScrapingConfig);
             if (config == null) return Enumerable.Empty<Vacancy>();
 
             var vacancies = new List<Vacancy>();
-            var currentUrl = source.Url;
+            var existingJobIds = (await _vacancyRepository.GetJobIdsByPlatform(source.Platform)).ToList();
+            
             var processedUrls = new HashSet<string>();
 
             // Limite de sécurité pour éviter les boucles infinies
@@ -99,8 +100,9 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 {
                     Console.WriteLine(item.InnerHtml);
                     if (ShouldExcludeItem(item, config.ItemConfig.ExclusionRules)) continue;
-                    var vacancy = await ExtractVacancyFromItem(item, config.ItemConfig, source);
-                    if (vacancy != null)
+                    var vacancy = await ExtractVacancyFromItem(item, existingJobIds, config.ItemConfig, source);
+                    if (vacancy != null 
+                        && !string.IsNullOrEmpty(vacancy.JobId))
                     {
                         vacancies.Add(vacancy);
                     }
@@ -112,12 +114,22 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 page = null;
             }
 
-            foreach (var v in vacancies) await _vacancyRepository.AddAsync(v);
+            foreach (var v in vacancies) 
+            {
+                if (v.Id != 0)
+                {
+                    await _vacancyRepository.UpdateAsync(v);
+                }
+                else
+                {
+                    await _vacancyRepository.AddAsync(v);
+                }
+            }
             return vacancies;
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error scraping source: {SourceName}", source.Name);
+            _logger.LogError(ex, "Error scraping source: {0} with url : {1}", source.Name, currentUrl);
             return Enumerable.Empty<Vacancy>();
         }
     }
@@ -139,6 +151,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         {
             if (_browser != null && !_browser.IsClosed) return;
 
+            _logger.LogInformation("Initializing browser...");
             var browserPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "PuppeteerSharp");
             var browserFetcher = new BrowserFetcher(new BrowserFetcherOptions { Path = browserPath });
             
@@ -168,6 +181,12 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                 },
                 Timeout = _puppeteerOptions.Timeout
             });
+
+            _logger.LogInformation("Browser initialized!");
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex.Message);
         }
         finally
         {
@@ -202,6 +221,13 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
 
     private async Task<IPage?> LoadPageWithPuppeteer(string url, string mainContentSelector)
     {
+        try{
+            await EnsureBrowserInitialized();
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError("Error initializing browser : {0}", ex.Message);
+        }
         if (_browser == null) return null;
         IPage? page = null;
         int retryCount = 0;
@@ -238,9 +264,15 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
                     catch 
                     {
                         _logger.LogWarning("Timeout waiting for selector: {Sel}", mainContentSelector); 
+                        throw;
                     }
                 }
                 return page;
+            }
+            catch(WaitTaskTimeoutException wex)
+            {
+                _logger.LogError(wex, "page has no mainSelector");
+                throw;
             }
             catch (Exception ex)
             {
@@ -270,7 +302,7 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
             // On utilise 'property' plutôt que 'attribute' pour avoir l'URL absolue directement via le DOM
             var nextPageUrl = await page.EvaluateFunctionAsync<string>(
                 @"(s) => { 
-                    const el = document.querySelector(s);
+                    const el = document.querySelector(s);                    
                     return el ? el.href : null; 
                 }", 
                 nextPageSelector
@@ -306,25 +338,45 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
         if (vacancy == null || string.IsNullOrEmpty(vacancy.DetailUrl) || detailConfig == null)
             return;
 
-        var page = await LoadPageWithPuppeteer(vacancy.DetailUrl, detailConfig.MainSelector);
-        if (page == null) return;
-
-        var html = await page.GetContentAsync();
-        if (string.IsNullOrEmpty(html))
+        IPage page = null;
+        try
         {
-            await page.CloseAsync();
+            page = await LoadPageWithPuppeteer(vacancy.DetailUrl, detailConfig.MainSelector);
+            if (page == null) return;
+
+            var html = await page.GetContentAsync();
+            if (string.IsNullOrEmpty(html))
+            {
+                await page.CloseAsync();
+                return;
+            }
+
+            var context = BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader());
+            var document = await context.OpenAsync(req => req.Content(html));
+
+            VacancyDetailParser.PopulateFromDocument(vacancy, document, detailConfig);
+
+            if (detailConfig?.IsActiveConfig?.BySentences?.Any() ?? false)
+            {
+                string sentences = string.Join("`,`", detailConfig.IsActiveConfig.BySentences);
+                string jsFunction = $@"() => {{const messages = [`{sentences}`];const pageText = document.body.innerText;return messages.some(msg => pageText.includes(msg));}}";
+                bool isExpired = await page.EvaluateFunctionAsync<bool>(jsFunction);
+                vacancy.IsActive = !isExpired;
+            }
+        }
+        catch(Exception ex)
+        {
+            _logger.LogError(ex.Message);
+            vacancy.IsActive = false;
             return;
         }
-
-        var context = BrowsingContext.New(AngleSharp.Configuration.Default.WithDefaultLoader());
-        var document = await context.OpenAsync(req => req.Content(html));
-
-        VacancyDetailParser.PopulateFromDocument(vacancy, document, detailConfig);
-
-        await page.CloseAsync();
+        finally{
+            if (page != null)
+                await page.CloseAsync();
+        }
     }
 
-    private async Task<Vacancy?> ExtractVacancyFromItem(IElement item, ItemConfiguration config, ScrapingSource source)
+    private async Task<Vacancy?> ExtractVacancyFromItem(IElement item, List<string> existingJobIds, ItemConfiguration config, ScrapingSource source)
     {
         var titleEl = item.QuerySelector(config.TitleSelector);
         if (titleEl == null) return null;
@@ -379,6 +431,17 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
             detailUrl = new Uri(new Uri(source.Url), detailUrl).AbsoluteUri;
         }
 
+        if (jobId == "d5c7f641b0686e2a")
+        {
+            _logger.LogInformation("problem incoming...");
+        }
+
+        if (existingJobIds.Contains(jobId))
+        {
+            _logger.LogInformation($"JobId {jobId} from source {source.Platform} already existing and skipped!");
+            return null;
+        }
+
         var vacancy = new Vacancy
         {
             Name = titleEl.TextContent.Trim(),
@@ -401,6 +464,45 @@ public class PuppeteerScrapingService : IScrapingService, IAsyncDisposable
     {
         var sources = await _sourceRepository.GetActiveSourcesAsync();
         foreach (var s in sources) await ScrapeSourceAsync(s);
+    }
+
+    /// <inheritdoc />
+    public async Task<ScrapingUpdateVacancyDetailResult> UpdateVacancyDetailAsync(int vacancyId)
+    {
+        var vacancy = await _vacancyRepository.GetByIdAsync(vacancyId);
+        if (vacancy == null)
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = $"Vacancy #{vacancyId} has not been found" };
+
+        if (string.IsNullOrEmpty(vacancy.DetailUrl))
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = "Vacancy does not have a detail URL" };
+
+        var source = await _sourceRepository.GetByIdAsync(vacancy.ScrapingSourceId);
+        if (source == null)
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = "Associated scraping source not found" };
+
+        DetailConfiguration? detailConfig = null;
+        try
+        {
+            if (!string.IsNullOrEmpty(source.ScrapingConfig))
+            {
+                var config = System.Text.Json.JsonSerializer.Deserialize<HierarchScraper.Core.Configurations.ScrapingConfiguration>(source.ScrapingConfig);
+                detailConfig = config?.ItemConfig?.DetailConfig;
+            }
+        }
+        catch (Exception ex)
+        {
+            // ignore parsing issues; detailConfig will remain null
+            Console.WriteLine("Failed to parse scraping config: " + ex.Message);
+        }
+
+        if (detailConfig == null || detailConfig.FieldSelectors == null || !detailConfig.FieldSelectors.Any())
+            return new ScrapingUpdateVacancyDetailResult { ErrorMessage = "No detail configuration available for this source" };
+
+        // reuse existing helper which loads the page and runs the parser
+        await PopulateVacancyDetailAsync(vacancy, detailConfig);
+        await _vacancyRepository.UpdateAsync(vacancy);
+
+        return new ScrapingUpdateVacancyDetailResult { Data = vacancy };
     }
 
     public async ValueTask DisposeAsync()
