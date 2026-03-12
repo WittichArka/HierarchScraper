@@ -30,16 +30,3 @@
 		"DetailUrlTemplate": "https://emplois.be.indeed.com/viewjob?jk={0}"
 	}
 }
-
-//OLD CONFIG :
-{
-	"ListSelector": "#mosaic-provider-jobcards",
-	"NextPageSelector": "a[data-testid='pagination-page-next']",
-	"ItemConfig": {
-		"ItemSelector": ".job_seen_beacon",
-		"ExclusionRules": [{"Selector": ".sponsored", "MustExist": true}],
-		"TitleSelector": "h2.jobTitle span[title]",
-		"JobKeyAttribute": "data-jk",
-		"DetailUrlTemplate": "https://emplois.be.indeed.com/viewjob?jk={0}"
-	}
-}
